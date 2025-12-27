@@ -16,7 +16,7 @@ import {
   collection,
   arrayUnion
 } from 'firebase/firestore';
-import { Settings, Calculator, LogOut, Lock, Save, Printer, Palette, Scroll, Layout, Trash2, Plus, Maximize, User, Mail, Key, Users, UserPlus, Database, FileJson, Layers, Percent, History, FileText, ArrowRight, ToggleLeft, ToggleRight, Sliders, Eye, EyeOff, Stamp, Factory, Ban } from 'lucide-react';
+import { Settings, Calculator, LogOut, Lock, Save, Printer, Palette, Scroll, Layout, Trash2, Plus, Maximize, User, Mail, Key, Users, UserPlus, Database, FileJson, Layers, Percent, History, FileText, ArrowRight, ToggleLeft, ToggleRight, Sliders, Eye, EyeOff, Stamp, Factory, Ban, Info } from 'lucide-react';
 
 // --- Firebase Setup ---
 const firebaseConfig = {
@@ -34,6 +34,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const appId = 'printing-app-v1'; 
+const LOGO_URL = "https://cdn.salla.sa/cdn-cgi/image/fit=scale-down,width=400,height=400,onerror=redirect,format=auto/XWZKA/YaMTPHLOL2Te8CL4gQbZmq17ktijebIHHKZRx6jp.png";
 
 // --- Constants ---
 const USERS_DB_PATH = ['artifacts', appId, 'public', 'data', 'settings', 'users_db'];
@@ -60,8 +61,8 @@ const DiscountManager = ({ discounts, onChange, unitLabel }) => {
   };
 
   return (
-    <div className="bg-green-50 p-4 rounded-xl border border-green-100 mt-4">
-      <div className="flex items-center gap-2 mb-3 text-green-800">
+    <div className="bg-[#337159]/5 p-4 rounded-xl border border-[#337159]/20 mt-4">
+      <div className="flex items-center gap-2 mb-3 text-[#337159]">
         <Percent className="w-5 h-5" />
         <h4 className="font-bold text-sm">شرائح الخصم (الكميات)</h4>
       </div>
@@ -69,26 +70,26 @@ const DiscountManager = ({ discounts, onChange, unitLabel }) => {
       <div className="space-y-2 mb-3">
         {(!discounts || discounts.length === 0) && <p className="text-xs text-slate-400 text-center">لا توجد خصومات مفعلة</p>}
         {discounts?.map((rule, idx) => (
-          <div key={idx} className="flex justify-between items-center bg-white p-2 rounded border border-green-200 text-sm">
-            <span>من <span className="font-bold text-green-700">{rule.min}</span> {unitLabel} فأكثر</span>
+          <div key={idx} className="flex justify-between items-center bg-white p-2 rounded border border-[#b99ecb]/30 text-sm">
+            <span>من <span className="font-bold text-[#337159]">{rule.min}</span> {unitLabel} فأكثر</span>
             <div className="flex items-center gap-3">
-              <span className="font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">خصم {rule.percent}%</span>
-              <button onClick={() => handleRemove(idx)} className="text-slate-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+              <span className="font-bold text-[#fa5732] bg-[#fa5732]/10 px-2 py-0.5 rounded">خصم {rule.percent}%</span>
+              <button onClick={() => handleRemove(idx)} className="text-slate-400 hover:text-[#fa5732]"><Trash2 className="w-4 h-4" /></button>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="flex gap-2 items-end border-t border-green-200 pt-3">
+      <div className="flex gap-2 items-end border-t border-[#337159]/10 pt-3">
         <div className="flex-1">
           <label className="text-[10px] text-slate-500 block mb-1">الحد الأدنى ({unitLabel})</label>
-          <input type="number" value={minQty} onChange={(e) => setMinQty(e.target.value)} className="w-full p-2 text-sm border border-green-200 rounded outline-none focus:ring-1 focus:ring-green-500" placeholder="مثال: 100" />
+          <input type="number" value={minQty} onChange={(e) => setMinQty(e.target.value)} className="w-full p-2 text-sm border border-[#b99ecb] rounded outline-none focus:ring-1 focus:ring-[#337159]" placeholder="مثال: 100" />
         </div>
         <div className="w-20">
           <label className="text-[10px] text-slate-500 block mb-1">نسبة الخصم %</label>
-          <input type="number" value={percent} onChange={(e) => setPercent(e.target.value)} className="w-full p-2 text-sm border border-green-200 rounded outline-none focus:ring-1 focus:ring-green-500" placeholder="مثال: 10" />
+          <input type="number" value={percent} onChange={(e) => setPercent(e.target.value)} className="w-full p-2 text-sm border border-[#b99ecb] rounded outline-none focus:ring-1 focus:ring-[#337159]" placeholder="مثال: 10" />
         </div>
-        <button onClick={handleAdd} className="bg-green-600 hover:bg-green-700 text-white p-2 rounded"><Plus className="w-5 h-5" /></button>
+        <button onClick={handleAdd} className="bg-[#337159] hover:bg-[#2a5c48] text-white p-2 rounded"><Plus className="w-5 h-5" /></button>
       </div>
     </div>
   );
@@ -98,9 +99,9 @@ const DiscountManager = ({ discounts, onChange, unitLabel }) => {
 
 // 1. ResultBox
 const ResultBox = ({ label, value, highlighted = false }) => (
-  <div className={`p-3 rounded-lg border ${highlighted ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-100'}`}>
+  <div className={`p-3 rounded-lg border ${highlighted ? 'bg-[#fa5732]/10 border-[#fa5732]/30' : 'bg-slate-50 border-slate-100'}`}>
     <div className="text-xs text-slate-500 mb-1">{label}</div>
-    <div className={`font-bold text-xl ${highlighted ? 'text-red-600' : 'text-slate-800'}`}>
+    <div className={`font-bold text-xl ${highlighted ? 'text-[#fa5732]' : 'text-[#337159]'}`}>
       {typeof value === 'object' && value !== null ? JSON.stringify(value) : value}
     </div>
   </div>
@@ -162,19 +163,19 @@ const AuthScreen = ({ onLoginSuccess, onCancel }) => {
 
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4" dir="rtl">
-      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full relative">
+      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full relative border-t-4 border-[#337159]">
         <button 
           onClick={onCancel}
-          className="absolute top-4 left-4 text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm font-bold transition-colors"
+          className="absolute top-4 left-4 text-slate-400 hover:text-[#337159] flex items-center gap-1 text-sm font-bold transition-colors"
         >
           <ArrowRight className="w-4 h-4" /> رجوع
         </button>
 
         <div className="text-center mb-8 mt-4">
-          <div className="bg-purple-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Lock className="text-white w-8 h-8" />
+          <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center p-1">
+             <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">دخول المسؤولين</h1>
+          <h1 className="text-2xl font-bold text-[#337159]">دخول المسؤولين</h1>
           <p className="text-slate-500 text-sm mt-1">يرجى تسجيل الدخول للوصول للإعدادات</p>
         </div>
 
@@ -182,20 +183,20 @@ const AuthScreen = ({ onLoginSuccess, onCancel }) => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1">البريد الإلكتروني</label>
+            <label className="block text-xs font-bold text-[#337159] mb-1">البريد الإلكتروني</label>
             <div className="relative">
-              <Mail className="absolute top-3 right-3 w-5 h-5 text-slate-400" />
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pr-10 pl-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none" placeholder="name@company.com" />
+              <Mail className="absolute top-3 right-3 w-5 h-5 text-[#b99ecb]" />
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pr-10 pl-3 py-2.5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#fa5732] outline-none" placeholder="name@company.com" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1">كلمة المرور</label>
+            <label className="block text-xs font-bold text-[#337159] mb-1">كلمة المرور</label>
             <div className="relative">
-              <Key className="absolute top-3 right-3 w-5 h-5 text-slate-400" />
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pr-10 pl-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none" placeholder="******" />
+              <Key className="absolute top-3 right-3 w-5 h-5 text-[#b99ecb]" />
+              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pr-10 pl-3 py-2.5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#fa5732] outline-none" placeholder="******" />
             </div>
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-purple-200 transition-all mt-6 disabled:opacity-70 disabled:cursor-not-allowed">
+          <button type="submit" disabled={loading} className="w-full bg-[#fa5732] hover:bg-[#d94a29] text-white py-3 rounded-xl font-bold shadow-lg shadow-orange-100 transition-all mt-6 disabled:opacity-70 disabled:cursor-not-allowed">
             {loading ? 'جاري التحقق...' : 'تسجيل الدخول'}
           </button>
         </form>
@@ -262,19 +263,19 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="bg-green-50 p-6 rounded-xl border border-green-100">
-        <h4 className="font-bold text-green-800 mb-4 flex items-center gap-2"><UserPlus className="w-5 h-5" /> إضافة مستخدم جديد</h4>
-        {msg && <div className={`p-3 rounded-lg mb-4 text-sm font-bold text-center ${msg.includes('بنجاح') ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>{msg}</div>}
+      <div className="bg-[#337159]/5 p-6 rounded-xl border border-[#337159]/20">
+        <h4 className="font-bold text-[#337159] mb-4 flex items-center gap-2"><UserPlus className="w-5 h-5" /> إضافة مستخدم جديد</h4>
+        {msg && <div className={`p-3 rounded-lg mb-4 text-sm font-bold text-center ${msg.includes('بنجاح') ? 'bg-green-100 text-green-800' : 'bg-red-200 text-red-800'}`}>{msg}</div>}
         <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label className="block text-xs font-bold text-slate-600 mb-1">الاسم</label><input type="text" required value={newUserName} onChange={e => setNewUserName(e.target.value)} className="w-full p-2 rounded border border-slate-300 focus:ring-2 focus:ring-green-500 outline-none"/></div>
-          <div><label className="block text-xs font-bold text-slate-600 mb-1">البريد الإلكتروني</label><input type="email" required value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} className="w-full p-2 rounded border border-slate-300 focus:ring-2 focus:ring-green-500 outline-none"/></div>
-          <div><label className="block text-xs font-bold text-slate-600 mb-1">كلمة المرور</label><input type="text" required value={newUserPass} onChange={e => setNewUserPass(e.target.value)} className="w-full p-2 rounded border border-slate-300 focus:ring-2 focus:ring-green-500 outline-none" placeholder="كلمة المرور"/></div>
-          <div><label className="block text-xs font-bold text-slate-600 mb-1">الدور (الصلاحية)</label><select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="w-full p-2 rounded border border-slate-300 focus:ring-2 focus:ring-green-500 outline-none bg-white"><option value="employee">موظف (حاسبة فقط)</option><option value="admin">مسؤول (تحكم كامل)</option></select></div>
-          <div className="md:col-span-2 mt-2"><button type="submit" disabled={loading} className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold shadow transition-colors disabled:opacity-50">{loading ? 'جاري الإنشاء...' : 'إنشاء الحساب'}</button></div>
+          <div><label className="block text-xs font-bold text-slate-600 mb-1">الاسم</label><input type="text" required value={newUserName} onChange={e => setNewUserName(e.target.value)} className="w-full p-2 rounded border border-[#b99ecb] focus:ring-2 focus:ring-[#337159] outline-none"/></div>
+          <div><label className="block text-xs font-bold text-slate-600 mb-1">البريد الإلكتروني</label><input type="email" required value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} className="w-full p-2 rounded border border-[#b99ecb] focus:ring-2 focus:ring-[#337159] outline-none"/></div>
+          <div><label className="block text-xs font-bold text-slate-600 mb-1">كلمة المرور</label><input type="text" required value={newUserPass} onChange={e => setNewUserPass(e.target.value)} className="w-full p-2 rounded border border-[#b99ecb] focus:ring-2 focus:ring-[#337159] outline-none" placeholder="كلمة المرور"/></div>
+          <div><label className="block text-xs font-bold text-slate-600 mb-1">الدور (الصلاحية)</label><select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="w-full p-2 rounded border border-[#b99ecb] focus:ring-2 focus:ring-[#337159] outline-none bg-white"><option value="employee">موظف (حاسبة فقط)</option><option value="admin">مسؤول (تحكم كامل)</option></select></div>
+          <div className="md:col-span-2 mt-2"><button type="submit" disabled={loading} className="w-full bg-[#337159] hover:bg-[#2a5c48] text-white py-2 rounded-lg font-bold shadow transition-colors disabled:opacity-50">{loading ? 'جاري الإنشاء...' : 'إنشاء الحساب'}</button></div>
         </form>
       </div>
       <div className="bg-white p-4 rounded-xl border border-slate-200">
-        <h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2"><Users className="w-5 h-5" /> قائمة المستخدمين المسجلين</h4>
+        <h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-[#b99ecb]" /> قائمة المستخدمين المسجلين</h4>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-right">
             <thead className="bg-slate-50 text-slate-600 font-bold">
@@ -285,7 +286,7 @@ const UserManagement = () => {
                 usersList.map((user, idx) => (
                   <tr key={idx} className="border-b hover:bg-slate-50">
                     <td className="p-3">{user.name}</td><td className="p-3 font-mono text-xs">{user.email}</td><td className="p-3 font-mono text-xs text-slate-400">{user.password}</td>
-                    <td className="p-3"><span className={`px-2 py-1 rounded text-xs font-bold ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{user.role === 'admin' ? 'مسؤول' : 'موظف'}</span></td>
+                    <td className="p-3"><span className={`px-2 py-1 rounded text-xs font-bold ${user.role === 'admin' ? 'bg-[#b99ecb]/20 text-[#b99ecb]' : 'bg-[#337159]/10 text-[#337159]'}`}>{user.role === 'admin' ? 'مسؤول' : 'موظف'}</span></td>
                     <td className="p-3 text-slate-400 text-xs">{new Date(user.createdAt).toLocaleDateString('ar-EG')}</td>
                   </tr>
                 ))
@@ -318,7 +319,7 @@ const HistoryLog = () => {
   return (
     <div className="bg-white p-4 rounded-xl border border-slate-200 animate-in fade-in duration-300">
       <h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
-        <History className="w-5 h-5 text-blue-600" />
+        <History className="w-5 h-5 text-[#fa5732]" />
         سجل تسعيرات الموظفين
       </h4>
       <div className="overflow-x-auto">
@@ -339,10 +340,10 @@ const HistoryLog = () => {
               logs.map((log) => (
                 <tr key={log.id} className="border-b hover:bg-slate-50">
                   <td className="p-3 text-xs font-mono text-slate-500">{new Date(log.createdAt).toLocaleString('ar-EG')}</td>
-                  <td className="p-3 font-bold text-slate-700">{log.employeeName}</td>
-                  <td className="p-3"><span className={`px-2 py-1 rounded text-xs font-bold ${log.type === 'roll' ? 'bg-purple-100 text-purple-700' : log.type === 'digital' ? 'bg-blue-100 text-blue-700' : log.type === 'uvdtf' ? 'bg-orange-100 text-orange-700' : log.type === 'offset' ? 'bg-cyan-100 text-cyan-700' : 'bg-pink-100 text-pink-700'}`}>{log.type === 'roll' ? 'رول' : log.type === 'digital' ? 'ديجيتال' : log.type === 'uvdtf' ? 'UV DTF' : log.type === 'offset' ? 'أوفست' : 'بصمة'}</span></td>
+                  <td className="p-3 font-bold text-[#337159]">{log.employeeName}</td>
+                  <td className="p-3"><span className={`px-2 py-1 rounded text-xs font-bold bg-[#b99ecb]/10 text-[#337159]`}>{log.type === 'roll' ? 'رول' : log.type === 'digital' ? 'ديجيتال' : log.type === 'uvdtf' ? 'UV DTF' : log.type === 'offset' ? 'أوفست' : 'بصمة'}</span></td>
                   <td className="p-3 text-xs text-slate-600">{log.details}</td>
-                  <td className="p-3 font-bold text-green-700">{Math.round(log.finalPrice)} ريال</td>
+                  <td className="p-3 font-bold text-[#fa5732]">{Math.round(log.finalPrice)} ريال</td>
                 </tr>
               ))
             )}
@@ -468,8 +469,13 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
     <div className="max-w-6xl mx-auto p-6" dir="rtl">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2"><Settings className="w-6 h-6 text-blue-600" /> لوحة تحكم المسؤول</h2>
-          <p className="text-xs text-slate-500 mt-1 mr-8">مرحباً بك، {currentUser.name}</p>
+          <div className="flex items-center gap-3">
+            <img src={LOGO_URL} alt="Logo" className="w-12 h-12 object-contain" />
+            <div>
+              <h2 className="text-2xl font-bold text-[#337159]">لوحة تحكم المسؤول</h2>
+              <p className="text-xs text-slate-500 mt-1">مرحباً بك، {currentUser.name}</p>
+            </div>
+          </div>
         </div>
         <button onClick={onLogout} className="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium border border-red-100 flex items-center gap-2">
           <LogOut className="w-4 h-4" /> خروج
@@ -477,22 +483,22 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
       </div>
 
       <div className="flex gap-2 mb-6 border-b border-slate-200 pb-1 overflow-x-auto">
-        <button onClick={() => setActiveTab('roll')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'roll' ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Scroll className="w-5 h-5" /> رول</button>
-        <button onClick={() => setActiveTab('digital')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'digital' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Layout className="w-5 h-5" /> ديجيتال</button>
-        <button onClick={() => setActiveTab('offset')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'offset' ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Factory className="w-5 h-5" /> أوفست</button>
-        <button onClick={() => setActiveTab('uvdtf')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'uvdtf' ? 'bg-orange-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Palette className="w-5 h-5" /> UV DTF</button>
-        <button onClick={() => setActiveTab('users')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'users' ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Users className="w-5 h-5" /> المستخدمين</button>
-        <button onClick={() => setActiveTab('history')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'history' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><History className="w-5 h-5" /> السجل</button>
+        <button onClick={() => setActiveTab('roll')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'roll' ? 'bg-[#337159] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Scroll className="w-5 h-5" /> رول</button>
+        <button onClick={() => setActiveTab('digital')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'digital' ? 'bg-[#337159] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Layout className="w-5 h-5" /> ديجيتال</button>
+        <button onClick={() => setActiveTab('offset')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'offset' ? 'bg-[#337159] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Factory className="w-5 h-5" /> أوفست</button>
+        <button onClick={() => setActiveTab('uvdtf')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'uvdtf' ? 'bg-[#337159] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Palette className="w-5 h-5" /> UV DTF</button>
+        <button onClick={() => setActiveTab('users')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'users' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Users className="w-5 h-5" /> المستخدمين</button>
+        <button onClick={() => setActiveTab('history')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'history' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><History className="w-5 h-5" /> السجل</button>
         <button onClick={() => setActiveTab('general')} className={`px-4 py-3 rounded-t-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === 'general' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Sliders className="w-5 h-5" /> عام</button>
       </div>
 
       <div className="bg-white p-8 rounded-b-xl rounded-tr-xl shadow-sm border border-slate-200 min-h-[400px]">
         {activeTab === 'roll' && (
           <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex items-center gap-3 mb-6 text-purple-600 border-b border-purple-100 pb-4"><Scroll className="w-6 h-6" /><h3 className="font-bold text-xl">إعدادات خامات الرول</h3></div>
+            <div className="flex items-center gap-3 mb-6 text-[#337159] border-b border-[#337159]/20 pb-4"><Scroll className="w-6 h-6" /><h3 className="font-bold text-xl">إعدادات خامات الرول</h3></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div><label className="block text-sm font-medium text-slate-600 mb-2">سعر المتر المربع الأساسي (ريال)</label><input type="number" value={localPrices.rollUnitPrice || ''} onChange={(e) => handleChange('rollUnitPrice', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-lg"/></div>
-              <div><label className="block text-sm font-medium text-slate-600 mb-2">عرض الرول الافتراضي (سم)</label><input type="number" value={localPrices.defaultRollWidth || ''} onChange={(e) => handleChange('defaultRollWidth', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-lg"/></div>
+              <div><label className="block text-sm font-medium text-slate-600 mb-2">سعر المتر المربع الأساسي (ريال)</label><input type="number" value={localPrices.rollUnitPrice || ''} onChange={(e) => handleChange('rollUnitPrice', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg"/></div>
+              <div><label className="block text-sm font-medium text-slate-600 mb-2">عرض الرول الافتراضي (سم)</label><input type="number" value={localPrices.defaultRollWidth || ''} onChange={(e) => handleChange('defaultRollWidth', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg"/></div>
             </div>
             <DiscountManager discounts={localPrices.rollDiscounts} onChange={(newDiscounts) => handleDiscountChange('rollDiscounts', newDiscounts)} unitLabel="متر مربع (المساحة)" />
           </div>
@@ -500,7 +506,7 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
 
         {activeTab === 'digital' && (
           <div className="space-y-8 animate-in fade-in duration-300">
-            <div className="flex items-center gap-3 mb-4 text-blue-600 border-b border-blue-100 pb-4"><Layout className="w-6 h-6" /><h3 className="font-bold text-xl">إعدادات خامات الديجيتال</h3></div>
+            <div className="flex items-center gap-3 mb-4 text-[#337159] border-b border-[#337159]/20 pb-4"><Layout className="w-6 h-6" /><h3 className="font-bold text-xl">إعدادات خامات الديجيتال</h3></div>
             
             {/* Toggle Show/Hide Paper Field */}
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between mb-6">
@@ -510,7 +516,7 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
               </div>
               <button 
                 onClick={() => handleChange('showDigitalPaperField', !localPrices.showDigitalPaperField)}
-                className={`p-2 rounded-full transition-colors ${localPrices.showDigitalPaperField !== false ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}
+                className={`p-2 rounded-full transition-colors ${localPrices.showDigitalPaperField !== false ? 'bg-[#337159]/10 text-[#337159]' : 'bg-slate-100 text-slate-400'}`}
               >
                 {localPrices.showDigitalPaperField !== false ? <ToggleRight className="w-10 h-10" /> : <ToggleLeft className="w-10 h-10" />}
               </button>
@@ -519,25 +525,25 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-8">
                 {/* 1. Foil Settings in Digital */}
-                <div className="bg-pink-50 p-6 rounded-xl border border-pink-100">
-                    <div className="flex items-center gap-2 mb-4 text-pink-800"><Stamp className="w-5 h-5" /><h4 className="font-bold text-lg">إعدادات البصمة (Foil)</h4></div>
+                <div className="bg-[#b99ecb]/5 p-6 rounded-xl border border-[#b99ecb]/30">
+                    <div className="flex items-center gap-2 mb-4 text-[#337159]"><Stamp className="w-5 h-5" /><h4 className="font-bold text-lg">إعدادات البصمة (Foil)</h4></div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div><label className="block text-xs font-bold text-slate-600 mb-1">سعر 1 سم² للقالب</label><input type="number" value={localPrices.foilMoldPricePerCm2 || ''} onChange={(e) => handleChange('foilMoldPricePerCm2', e.target.value)} className="w-full p-2 border border-pink-200 rounded focus:ring-1 focus:ring-pink-500 outline-none text-sm"/></div>
-                        <div><label className="block text-xs font-bold text-slate-600 mb-1">الحد الأدنى للقالب</label><input type="number" value={localPrices.foilMinMoldPrice || ''} onChange={(e) => handleChange('foilMinMoldPrice', e.target.value)} className="w-full p-2 border border-pink-200 rounded focus:ring-1 focus:ring-pink-500 outline-none text-sm"/></div>
-                        <div><label className="block text-xs font-bold text-slate-600 mb-1">سعر التبصيم (للحبة)</label><input type="number" value={localPrices.foilStampingUnitPrice || ''} onChange={(e) => handleChange('foilStampingUnitPrice', e.target.value)} className="w-full p-2 border border-pink-200 rounded focus:ring-1 focus:ring-pink-500 outline-none text-sm"/></div>
+                        <div><label className="block text-xs font-bold text-slate-600 mb-1">سعر 1 سم² للقالب</label><input type="number" value={localPrices.foilMoldPricePerCm2 || ''} onChange={(e) => handleChange('foilMoldPricePerCm2', e.target.value)} className="w-full p-2 border border-[#b99ecb] rounded focus:ring-1 focus:ring-[#337159] outline-none text-sm"/></div>
+                        <div><label className="block text-xs font-bold text-slate-600 mb-1">الحد الأدنى للقالب</label><input type="number" value={localPrices.foilMinMoldPrice || ''} onChange={(e) => handleChange('foilMinMoldPrice', e.target.value)} className="w-full p-2 border border-[#b99ecb] rounded focus:ring-1 focus:ring-[#337159] outline-none text-sm"/></div>
+                        <div><label className="block text-xs font-bold text-slate-600 mb-1">سعر التبصيم (للحبة)</label><input type="number" value={localPrices.foilStampingUnitPrice || ''} onChange={(e) => handleChange('foilStampingUnitPrice', e.target.value)} className="w-full p-2 border border-[#b99ecb] rounded focus:ring-1 focus:ring-[#337159] outline-none text-sm"/></div>
                     </div>
                 </div>
 
                 {/* 2. Sheet Sizes */}
-                <div className="bg-blue-50 p-6 rounded-xl">
-                  <div className="flex items-center gap-2 mb-4 text-blue-800"><Maximize className="w-5 h-5" /><h4 className="font-bold text-lg">مقاسات الأفرخ (سم)</h4></div>
+                <div className="bg-[#337159]/5 p-6 rounded-xl border border-[#337159]/10">
+                  <div className="flex items-center gap-2 mb-4 text-[#337159]"><Maximize className="w-5 h-5" /><h4 className="font-bold text-lg">مقاسات الأفرخ (سم)</h4></div>
                   <div className="space-y-4">
                     {localPrices.digitalSheetSizes?.map((size, idx) => (
-                      <div key={idx} className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
-                        <div className="mb-3"><label className="text-xs text-slate-400 block mb-1">اسم المقاس</label><input type="text" value={size.name} onChange={(e) => handleSheetSizeChange(idx, 'name', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 outline-none font-bold text-slate-700"/></div>
+                      <div key={idx} className="bg-white p-4 rounded-lg border border-[#b99ecb]/30 shadow-sm">
+                        <div className="mb-3"><label className="text-xs text-slate-400 block mb-1">اسم المقاس</label><input type="text" value={size.name} onChange={(e) => handleSheetSizeChange(idx, 'name', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-[#337159] outline-none font-bold text-slate-700"/></div>
                         <div className="grid grid-cols-2 gap-4">
-                          <div><label className="text-xs text-slate-400 block mb-1">العرض</label><input type="number" value={size.width} onChange={(e) => handleSheetSizeChange(idx, 'width', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 outline-none text-center"/></div>
-                          <div><label className="text-xs text-slate-400 block mb-1">الطول</label><input type="number" value={size.height} onChange={(e) => handleSheetSizeChange(idx, 'height', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 outline-none text-center"/></div>
+                          <div><label className="text-xs text-slate-400 block mb-1">العرض</label><input type="number" value={size.width} onChange={(e) => handleSheetSizeChange(idx, 'width', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-[#337159] outline-none text-center"/></div>
+                          <div><label className="text-xs text-slate-400 block mb-1">الطول</label><input type="number" value={size.height} onChange={(e) => handleSheetSizeChange(idx, 'height', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-[#337159] outline-none text-center"/></div>
                         </div>
                       </div>
                     ))}
@@ -563,18 +569,18 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                 </div>
               </div>
               <div className="flex flex-col h-full">
-                <div className="flex-1 bg-slate-50 rounded-xl p-4 mb-4 overflow-y-auto min-h-[300px] border border-slate-200">
+                <div className="flex-1 bg-[#337159]/5 rounded-xl p-4 mb-4 overflow-y-auto min-h-[300px] border border-[#337159]/10">
                   {localPrices.digitalPaperTypes?.map((paper, idx) => (
                     <div key={idx} className={`flex items-center gap-3 bg-white p-3 mb-2 rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-shadow ${paper.active === false ? 'opacity-50' : ''}`}>
                       <button 
                         onClick={() => handlePaperChange(idx, 'active', paper.active === false ? true : false)}
-                        className={`p-1 rounded-full ${paper.active !== false ? 'text-green-500 hover:bg-green-50' : 'text-slate-400 hover:bg-slate-100'}`}
+                        className={`p-1 rounded-full ${paper.active !== false ? 'text-[#337159] hover:bg-green-50' : 'text-slate-400 hover:bg-slate-100'}`}
                         title={paper.active !== false ? 'تعطيل' : 'تفعيل'}
                       >
                         {paper.active !== false ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                       </button>
-                      <div className="flex-1"><label className="text-[10px] text-slate-400 block mb-1">اسم الورق</label><input type="text" value={paper.name} onChange={(e) => handlePaperChange(idx, 'name', e.target.value)} className="w-full text-sm font-bold text-slate-700 border-b border-transparent focus:border-blue-300 outline-none bg-transparent hover:bg-slate-50 p-1"/></div>
-                      <div className="w-20"><label className="text-[10px] text-slate-400 block mb-1">السعر (ريال)</label><input type="number" value={paper.price} onChange={(e) => handlePaperChange(idx, 'price', e.target.value)} className="w-full text-sm font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-blue-400"/></div>
+                      <div className="flex-1"><label className="text-[10px] text-slate-400 block mb-1">اسم الورق</label><input type="text" value={paper.name} onChange={(e) => handlePaperChange(idx, 'name', e.target.value)} className="w-full text-sm font-bold text-slate-700 border-b border-transparent focus:border-[#337159] outline-none bg-transparent hover:bg-slate-50 p-1"/></div>
+                      <div className="w-20"><label className="text-[10px] text-slate-400 block mb-1">السعر (ريال)</label><input type="number" value={paper.price} onChange={(e) => handlePaperChange(idx, 'price', e.target.value)} className="w-full text-sm font-bold text-[#337159] bg-[#337159]/10 border border-[#337159]/20 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-[#337159]"/></div>
                       <button onClick={() => handleRemovePaper(idx)} className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   ))}
@@ -582,9 +588,9 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                 <div className="bg-slate-100 p-4 rounded-xl border border-slate-200 mb-4">
                   <h5 className="text-sm font-bold text-slate-600 mb-3">إضافة نوع جديد</h5>
                   <div className="flex gap-3 items-end">
-                    <div className="flex-1"><label className="block text-xs text-slate-500 mb-1">اسم الخامة</label><input type="text" value={newPaperName} onChange={(e) => setNewPaperName(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none" placeholder="مثال: كوشيه 300"/></div>
-                    <div className="w-24"><label className="block text-xs text-slate-500 mb-1">السعر</label><input type="number" value={newPaperPrice} onChange={(e) => setNewPaperPrice(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none" placeholder="0"/></div>
-                    <button onClick={safeHandleAddPaper} className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg transition-colors flex items-center justify-center shadow-md"><Plus className="w-5 h-5" /></button>
+                    <div className="flex-1"><label className="block text-xs text-slate-500 mb-1">اسم الخامة</label><input type="text" value={newPaperName} onChange={(e) => setNewPaperName(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#337159] outline-none" placeholder="مثال: كوشيه 300"/></div>
+                    <div className="w-24"><label className="block text-xs text-slate-500 mb-1">السعر</label><input type="number" value={newPaperPrice} onChange={(e) => setNewPaperPrice(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#337159] outline-none" placeholder="0"/></div>
+                    <button onClick={safeHandleAddPaper} className="bg-[#337159] hover:bg-[#2a5c48] text-white p-2.5 rounded-lg transition-colors flex items-center justify-center shadow-md"><Plus className="w-5 h-5" /></button>
                   </div>
                 </div>
                 <DiscountManager discounts={localPrices.digitalDiscounts} onChange={(newDiscounts) => handleDiscountChange('digitalDiscounts', newDiscounts)} unitLabel="شيت (عدد الأفرخ)" />
@@ -596,22 +602,22 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
         {/* --- Offset Tab Settings --- */}
         {activeTab === 'offset' && (
           <div className="space-y-8 animate-in fade-in duration-300">
-            <div className="flex items-center gap-3 mb-4 text-cyan-600 border-b border-cyan-100 pb-4"><Factory className="w-6 h-6" /><h3 className="font-bold text-xl">إعدادات الأوفست (Offset)</h3></div>
+            <div className="flex items-center gap-3 mb-4 text-[#337159] border-b border-[#337159]/20 pb-4"><Factory className="w-6 h-6" /><h3 className="font-bold text-xl">إعدادات الأوفست (Offset)</h3></div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <label className="block text-sm font-bold text-slate-600 mb-2">سعر الزنكة الواحدة (ريال)</label>
-                <input type="number" value={localPrices.offsetPlatePrice || ''} onChange={(e) => handleChange('offsetPlatePrice', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-lg"/>
+                <input type="number" value={localPrices.offsetPlatePrice || ''} onChange={(e) => handleChange('offsetPlatePrice', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg"/>
                 <p className="text-xs text-slate-400 mt-1">يتم ضرب هذا السعر في عدد الألوان (4 أو 8).</p>
               </div>
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <label className="block text-sm font-bold text-slate-600 mb-2">سعر طباعة 1000 فرخ</label>
-                <input type="number" value={localPrices.offsetPrintPrice1000 || ''} onChange={(e) => handleChange('offsetPrintPrice1000', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-lg"/>
+                <input type="number" value={localPrices.offsetPrintPrice1000 || ''} onChange={(e) => handleChange('offsetPrintPrice1000', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg"/>
                 <p className="text-xs text-slate-400 mt-1">تكلفة تشغيل الماكينة لكل ألف.</p>
               </div>
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <label className="block text-sm font-bold text-slate-600 mb-2">الحد الأدنى (زنكات + طباعة)</label>
-                <input type="number" value={localPrices.offsetMinQty || ''} onChange={(e) => handleChange('offsetMinQty', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-lg"/>
+                <input type="number" value={localPrices.offsetMinQty || ''} onChange={(e) => handleChange('offsetMinQty', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg"/>
                 <p className="text-xs text-slate-400 mt-1">أقل سعر يمكن احتسابه للتشغيل والزنكات معاً.</p>
               </div>
             </div>
@@ -619,9 +625,9 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Paper Management for Offset */}
               <div className="flex flex-col h-full">
-                <div className="bg-cyan-50 p-4 rounded-t-xl border border-cyan-100">
-                  <h4 className="font-bold text-cyan-800">قائمة أنواع ورق الأوفست</h4>
-                  <p className="text-xs text-cyan-600">الأسعار هنا لكل 1000 فرخ (70×100)</p>
+                <div className="bg-[#337159]/10 p-4 rounded-t-xl border border-[#337159]/20">
+                  <h4 className="font-bold text-[#337159]">قائمة أنواع ورق الأوفست</h4>
+                  <p className="text-xs text-[#337159]/80">الأسعار هنا لكل 1000 فرخ (70×100)</p>
                 </div>
                 <div className="flex-1 bg-white border border-t-0 border-slate-200 p-4 mb-4 overflow-y-auto min-h-[300px]">
                   {localPrices.offsetPaperTypes?.map((paper, idx) => (
@@ -638,7 +644,7 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                       </div>
                       <div className="w-24">
                         <label className="text-[10px] text-slate-400 block mb-1">سعر الألف (ريال)</label>
-                        <input type="number" value={paper.price} onChange={(e) => handleOffsetPaperChange(idx, 'price', e.target.value)} className="w-full text-sm font-bold text-cyan-600 bg-white border border-cyan-100 rounded px-2 py-1 outline-none text-center"/>
+                        <input type="number" value={paper.price} onChange={(e) => handleOffsetPaperChange(idx, 'price', e.target.value)} className="w-full text-sm font-bold text-[#337159] bg-white border border-[#b99ecb] rounded px-2 py-1 outline-none text-center"/>
                       </div>
                       <button onClick={() => handleRemoveOffsetPaper(idx)} className="text-red-400 hover:text-red-600 p-2"><Trash2 className="w-4 h-4" /></button>
                     </div>
@@ -648,9 +654,9 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                   <div className="mt-4 pt-4 border-t border-slate-100">
                     <h5 className="text-xs font-bold text-slate-500 mb-2">إضافة ورق جديد</h5>
                     <div className="flex gap-2 items-end">
-                      <input type="text" value={newOffsetPaperName} onChange={(e) => setNewOffsetPaperName(e.target.value)} className="flex-1 p-2 border border-slate-300 rounded text-sm outline-none focus:ring-1 focus:ring-cyan-500" placeholder="اسم الورق (مثال: كوشيه 300)" />
-                      <input type="number" value={newOffsetPaperPrice} onChange={(e) => setNewOffsetPaperPrice(e.target.value)} className="w-24 p-2 border border-slate-300 rounded text-sm outline-none focus:ring-1 focus:ring-cyan-500" placeholder="السعر/1000" />
-                      <button onClick={safeHandleAddOffsetPaper} className="bg-cyan-600 hover:bg-cyan-700 text-white p-2 rounded"><Plus className="w-5 h-5" /></button>
+                      <input type="text" value={newOffsetPaperName} onChange={(e) => setNewOffsetPaperName(e.target.value)} className="flex-1 p-2 border border-slate-300 rounded text-sm outline-none focus:ring-1 focus:ring-[#337159]" placeholder="اسم الورق (مثال: كوشيه 300)" />
+                      <input type="number" value={newOffsetPaperPrice} onChange={(e) => setNewOffsetPaperPrice(e.target.value)} className="w-24 p-2 border border-slate-300 rounded text-sm outline-none focus:ring-1 focus:ring-[#337159]" placeholder="السعر/1000" />
+                      <button onClick={safeHandleAddOffsetPaper} className="bg-[#337159] hover:bg-[#2a5c48] text-white p-2 rounded"><Plus className="w-5 h-5" /></button>
                     </div>
                   </div>
                 </div>
@@ -688,7 +694,7 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
               </div>
               <button 
                 onClick={() => toggleGeneralSetting('allowPriceOverride')}
-                className={`p-2 rounded-full transition-colors ${localGeneral.allowPriceOverride ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}
+                className={`p-2 rounded-full transition-colors ${localGeneral.allowPriceOverride ? 'bg-[#337159]/10 text-[#337159]' : 'bg-slate-100 text-slate-400'}`}
               >
                 {localGeneral.allowPriceOverride ? <ToggleRight className="w-10 h-10" /> : <ToggleLeft className="w-10 h-10" />}
               </button>
@@ -700,28 +706,28 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                 
                 <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-slate-700 font-medium"><Scroll className="w-4 h-4" /> حاسبة الرول (Roll-to-Roll)</span>
-                    <button onClick={() => toggleGeneralSetting('showRoll')} className={`p-1 rounded-full transition-colors ${localGeneral.showRoll !== false ? 'text-green-500' : 'text-slate-300'}`}>
+                    <button onClick={() => toggleGeneralSetting('showRoll')} className={`p-1 rounded-full transition-colors ${localGeneral.showRoll !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
                         {localGeneral.showRoll !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
                     </button>
                 </div>
 
                 <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-slate-700 font-medium"><Layout className="w-4 h-4" /> حاسبة الديجيتال (Digital)</span>
-                    <button onClick={() => toggleGeneralSetting('showDigital')} className={`p-1 rounded-full transition-colors ${localGeneral.showDigital !== false ? 'text-green-500' : 'text-slate-300'}`}>
+                    <button onClick={() => toggleGeneralSetting('showDigital')} className={`p-1 rounded-full transition-colors ${localGeneral.showDigital !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
                         {localGeneral.showDigital !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
                     </button>
                 </div>
 
                 <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-slate-700 font-medium"><Factory className="w-4 h-4" /> حاسبة الأوفست (Offset)</span>
-                    <button onClick={() => toggleGeneralSetting('showOffset')} className={`p-1 rounded-full transition-colors ${localGeneral.showOffset !== false ? 'text-green-500' : 'text-slate-300'}`}>
+                    <button onClick={() => toggleGeneralSetting('showOffset')} className={`p-1 rounded-full transition-colors ${localGeneral.showOffset !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
                         {localGeneral.showOffset !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
                     </button>
                 </div>
 
                 <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-slate-700 font-medium"><Palette className="w-4 h-4" /> حاسبة UV DTF</span>
-                    <button onClick={() => toggleGeneralSetting('showUvDtf')} className={`p-1 rounded-full transition-colors ${localGeneral.showUvDtf !== false ? 'text-green-500' : 'text-slate-300'}`}>
+                    <button onClick={() => toggleGeneralSetting('showUvDtf')} className={`p-1 rounded-full transition-colors ${localGeneral.showUvDtf !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
                         {localGeneral.showUvDtf !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
                     </button>
                 </div>
@@ -743,7 +749,7 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
 
       {activeTab !== 'users' && activeTab !== 'history' && activeTab !== 'database' && (
         <div className="mt-8 flex justify-end">
-          <button onClick={handleSave} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white py-3 px-8 rounded-xl font-bold shadow-lg flex items-center gap-2 disabled:opacity-50 transition-transform hover:scale-105 active:scale-95">
+          <button onClick={handleSave} disabled={saving} className="bg-[#fa5732] hover:bg-[#d94a29] text-white py-3 px-8 rounded-xl font-bold shadow-lg flex items-center gap-2 disabled:opacity-50 transition-transform hover:scale-105 active:scale-95">
             <Save className="w-5 h-5" /> {saving ? 'جاري الحفظ...' : 'حفظ التعديلات'}
           </button>
         </div>
@@ -861,7 +867,18 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
           }
         });
       }
-      const perSheet = Math.floor(sheetW / (stickerW + 0.2)) * Math.floor(sheetH / (stickerH + 0.2)); const sheetsNeeded = perSheet > 0 ? Math.ceil(qty / perSheet) : 0; 
+      
+      // -- UPDATED LOGIC: Calculate best fit (rotate if necessary) --
+      const margin = 0.2;
+      // Option 1: No rotation (Width on Width, Height on Height)
+      const count1 = Math.floor(sheetW / (stickerW + margin)) * Math.floor(sheetH / (stickerH + margin));
+      // Option 2: Rotated 90 degrees (Width on Height, Height on Width)
+      const count2 = Math.floor(sheetW / (stickerH + margin)) * Math.floor(sheetH / (stickerW + margin));
+      
+      const perSheet = Math.max(count1, count2);
+      const isRotatedBest = count2 > count1;
+
+      const sheetsNeeded = perSheet > 0 ? Math.ceil(qty / perSheet) : 0; 
       
       const basePrice = sheetsNeeded * unitPrice;
       const totalAddonsPrice = sheetsNeeded * addonsCostPerSheet;
@@ -889,13 +906,39 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
       const discountAmount = finalPrice * (discountPercent / 100);
       const priceAfterDiscount = finalPrice - discountAmount;
       
+      // --- Calculate Savings Logic ---
+      let savingsMessage = null;
+      if (count1 !== count2 && perSheet > 0) {
+          const worstCount = Math.min(count1, count2);
+          if (worstCount > 0) {
+              const worstSheetsNeeded = Math.ceil(qty / worstCount);
+              const worstBasePrice = worstSheetsNeeded * unitPrice;
+              const worstAddons = worstSheetsNeeded * addonsCostPerSheet;
+              
+              const worstPricePreTax = worstBasePrice + worstAddons + foilCost;
+              const worstTax = worstPricePreTax * 0.15;
+              const worstFinalPrice = worstPricePreTax + worstTax;
+              
+              const worstDiscountPercent = getDiscountPercent(worstSheetsNeeded, prices.digitalDiscounts);
+              const worstDiscountAmount = worstFinalPrice * (worstDiscountPercent / 100);
+              const worstPriceAfterDiscount = worstFinalPrice - worstDiscountAmount;
+
+              const diff = worstPriceAfterDiscount - priceAfterDiscount;
+              
+              if (diff > 0) {
+                  const method = isRotatedBest ? "التدوير (تدوير التصميم)" : "الوضع القياسي";
+                  savingsMessage = `تم اختيار ${method} تلقائياً لأنه وفر ${Math.round(diff)} ريال مقارنة بالوضع الآخر.`;
+              }
+          }
+      }
+
       let details = `ديجيتال: ${paperName} (${qty} قطعة)`;
       if (isFoilEnabled) details += ` + بصمة`;
 
       return { 
           perSheet, sheetsNeeded, pricePreTax, tax, finalPrice, sheetPriceUsed: unitPrice, addonsCostPerSheet, totalAddonsPrice, 
           dims: `${sheetW}×${sheetH}`, discountPercent, discountAmount, priceAfterDiscount, details,
-          foilCost, moldPrice, stampingCost
+          foilCost, moldPrice, stampingCost, savingsMessage
       };
     }
     else if (activeTab === 'offset') {
@@ -1011,35 +1054,41 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
             <Ban className="w-16 h-16 text-slate-300 mb-4" />
             <h2 className="text-xl font-bold text-slate-600">عذراً، جميع الحاسبات معطلة حالياً</h2>
             <p className="text-sm text-slate-400 mt-2">يرجى التواصل مع المسؤول لتفعيل الخدمات.</p>
-            <button onClick={onAdminLogin} className="mt-8 text-slate-500 hover:text-purple-600 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 hover:border-purple-200 transition-colors"><Lock className="w-4 h-4" /> لوحة المسؤول</button>
+            <button onClick={onAdminLogin} className="mt-8 text-slate-500 hover:text-[#fa5732] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 hover:border-[#fa5732] transition-colors"><Lock className="w-4 h-4" /> لوحة المسؤول</button>
         </div>
       )
   }
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8" dir="rtl">
-      <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-xl shadow-sm">
-        <div className="flex items-center gap-3"><div className="bg-blue-600 p-2 rounded-lg"></div><div><h2 className="text-xl font-bold text-slate-800">حاسبة التسعير</h2><p className="text-sm text-slate-500">مرحباً بك في النظام</p></div></div>
-        <button onClick={onAdminLogin} className="text-slate-500 hover:text-purple-600 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 hover:border-purple-200 transition-colors"><Lock className="w-4 h-4" /> لوحة المسؤول</button>
+      <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-xl shadow-sm border-t-4 border-[#337159]">
+        <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-slate-50 rounded-lg p-1 border border-slate-100"><img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" /></div>
+            <div>
+                <h2 className="text-xl font-bold text-[#337159]">حاسبة التسعير</h2>
+                <p className="text-sm text-slate-500">مرحباً بك في النظام</p>
+            </div>
+        </div>
+        <button onClick={onAdminLogin} className="text-slate-500 hover:text-[#fa5732] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 hover:border-[#fa5732] transition-colors"><Lock className="w-4 h-4" /> لوحة المسؤول</button>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-3 space-y-3">
           {generalSettings?.showRoll !== false && (
-            <button onClick={() => setActiveTab('roll')} className={`w-full text-right p-4 rounded-xl font-medium transition-all flex items-center gap-3 ${activeTab === 'roll' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50'}`}><Scroll className="w-5 h-5" /> حاسبة رول تو رول</button>
+            <button onClick={() => setActiveTab('roll')} className={`w-full text-right p-4 rounded-xl font-medium transition-all flex items-center gap-3 ${activeTab === 'roll' ? 'bg-[#337159] text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50'}`}><Scroll className="w-5 h-5" /> حاسبة رول تو رول</button>
           )}
           {generalSettings?.showDigital !== false && (
-            <button onClick={() => setActiveTab('digital')} className={`w-full text-right p-4 rounded-xl font-medium transition-all flex items-center gap-3 ${activeTab === 'digital' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50'}`}><Layout className="w-5 h-5" /> حاسبة الديجيتال</button>
+            <button onClick={() => setActiveTab('digital')} className={`w-full text-right p-4 rounded-xl font-medium transition-all flex items-center gap-3 ${activeTab === 'digital' ? 'bg-[#337159] text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50'}`}><Layout className="w-5 h-5" /> حاسبة الديجيتال</button>
           )}
           {generalSettings?.showOffset !== false && (
-            <button onClick={() => setActiveTab('offset')} className={`w-full text-right p-4 rounded-xl font-medium transition-all flex items-center gap-3 ${activeTab === 'offset' ? 'bg-cyan-600 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50'}`}><Factory className="w-5 h-5" /> حاسبة الأوفست</button>
+            <button onClick={() => setActiveTab('offset')} className={`w-full text-right p-4 rounded-xl font-medium transition-all flex items-center gap-3 ${activeTab === 'offset' ? 'bg-[#337159] text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50'}`}><Factory className="w-5 h-5" /> حاسبة الأوفست</button>
           )}
           {generalSettings?.showUvDtf !== false && (
-            <button onClick={() => setActiveTab('uvdtf')} className={`w-full text-right p-4 rounded-xl font-medium transition-all flex items-center gap-3 ${activeTab === 'uvdtf' ? 'bg-orange-600 text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50'}`}><Palette className="w-5 h-5" /> حاسبة UV DTF</button>
+            <button onClick={() => setActiveTab('uvdtf')} className={`w-full text-right p-4 rounded-xl font-medium transition-all flex items-center gap-3 ${activeTab === 'uvdtf' ? 'bg-[#337159] text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50'}`}><Palette className="w-5 h-5" /> حاسبة UV DTF</button>
           )}
         </div>
         <div className="lg:col-span-9 space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="bg-slate-50 border-b border-slate-100 p-4 flex justify-between items-center"><h3 className="font-bold text-slate-700 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-green-500"></span> المدخلات (بيانات العميل)</h3></div>
+            <div className="bg-slate-50 border-b border-slate-100 p-4 flex justify-between items-center"><h3 className="font-bold text-slate-700 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#337159]"></span> المدخلات (بيانات العميل)</h3></div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
               
               {/* --- Custom Unit Price Override Input --- */}
@@ -1056,7 +1105,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                       type="number" 
                       value={customUnitPrice} 
                       onChange={(e) => setCustomUnitPrice(e.target.value)}
-                      className="w-full p-2 bg-white border border-orange-300 rounded text-center font-bold text-orange-900 outline-none focus:ring-1 focus:ring-orange-500"
+                      className="w-full p-2 bg-white border border-orange-300 rounded text-center font-bold text-orange-900 outline-none focus:ring-1 focus:ring-[#fa5732]"
                       placeholder={getSystemPriceDisplay()}
                     />
                   </div>
@@ -1072,7 +1121,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                   {(prices.showDigitalPaperField !== false) && (
                     <div className="md:col-span-2">
                       <label className="block text-sm font-bold text-slate-600 mb-2">نوع الورق / الخامة</label>
-                      <select value={selectedPaperIndex} onChange={(e) => setSelectedPaperIndex(Number(e.target.value))} className="w-full p-3 bg-blue-50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-lg text-slate-700">
+                      <select value={selectedPaperIndex} onChange={(e) => setSelectedPaperIndex(Number(e.target.value))} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none font-bold text-lg text-slate-700">
                         {activePapers.length > 0 ? (
                           activePapers.map((type, idx) => (
                             <option key={idx} value={idx}>{type.name} - ({type.price} ريال)</option>
@@ -1086,7 +1135,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
 
                   <div className="md:col-span-1">
                     <label className="block text-sm font-bold text-slate-600 mb-2">مقاس الفرخ</label>
-                    <select value={selectedSheetSizeIndex} onChange={(e) => setSelectedSheetSizeIndex(Number(e.target.value))} className="w-full p-3 bg-blue-50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-lg text-slate-700">
+                    <select value={selectedSheetSizeIndex} onChange={(e) => setSelectedSheetSizeIndex(Number(e.target.value))} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none font-bold text-lg text-slate-700">
                       {prices.digitalSheetSizes && prices.digitalSheetSizes.length > 0 ? ( prices.digitalSheetSizes.map((size, idx) => (<option key={idx} value={idx}>{size.name}</option>)) ) : (<option value={0}>33×48</option>)}
                     </select>
                   </div>
@@ -1095,13 +1144,13 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                   <div className="md:col-span-3 my-2">
                     <button 
                         onClick={() => setIsFoilEnabled(!isFoilEnabled)}
-                        className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all ${isFoilEnabled ? 'bg-pink-50 border-pink-300 text-pink-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}
+                        className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all ${isFoilEnabled ? 'bg-[#b99ecb]/10 border-[#b99ecb] text-[#337159]' : 'bg-slate-50 border-slate-200 text-slate-500'}`}
                     >
                         <div className="flex items-center gap-2">
                             <Stamp className="w-5 h-5" />
                             <span className="font-bold">إضافة بصمة (Foil Stamping)</span>
                         </div>
-                        {isFoilEnabled ? <ToggleRight className="w-8 h-8 text-pink-500" /> : <ToggleLeft className="w-8 h-8 text-slate-300" />}
+                        {isFoilEnabled ? <ToggleRight className="w-8 h-8 text-[#fa5732]" /> : <ToggleLeft className="w-8 h-8 text-slate-300" />}
                     </button>
                   </div>
 
@@ -1129,7 +1178,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                 <>
                    <div className="md:col-span-2">
                     <label className="block text-sm font-bold text-slate-600 mb-2">نوع الورق (سعر الألف)</label>
-                    <select value={selectedOffsetPaperIndex} onChange={(e) => setSelectedOffsetPaperIndex(Number(e.target.value))} className="w-full p-3 bg-cyan-50 border border-cyan-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none font-bold text-lg text-slate-700">
+                    <select value={selectedOffsetPaperIndex} onChange={(e) => setSelectedOffsetPaperIndex(Number(e.target.value))} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none font-bold text-lg text-slate-700">
                       {activeOffsetPapers.length > 0 ? (
                         activeOffsetPapers.map((type, idx) => (
                           <option key={idx} value={idx}>{type.name} - ({type.price} ريال/1000)</option>
@@ -1141,7 +1190,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                   </div>
                   <div className="md:col-span-1">
                     <label className="block text-sm font-bold text-slate-600 mb-2">عدد الأوجه</label>
-                    <select name="offsetFaces" value={inputs.offsetFaces} onChange={handleFaceChange} className="w-full p-3 bg-cyan-50 border border-cyan-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none font-bold text-lg text-slate-700">
+                    <select name="offsetFaces" value={inputs.offsetFaces} onChange={handleFaceChange} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none font-bold text-lg text-slate-700">
                       <option value="1">وجه واحد (4 زنكات)</option>
                       <option value="2">وجهين (8 زنكات)</option>
                     </select>
@@ -1149,22 +1198,22 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                 </>
               )}
 
-              <div><label className="block text-sm font-bold text-slate-600 mb-2">العرض (سم)</label><input type="number" name="width" value={inputs.width || ''} onChange={handleInput} className="w-full p-3 bg-green-50 border border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-center font-bold text-lg" placeholder="0"/></div>
-              <div><label className="block text-sm font-bold text-slate-600 mb-2">الارتفاع (سم)</label><input type="number" name="height" value={inputs.height || ''} onChange={handleInput} className="w-full p-3 bg-green-50 border border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-center font-bold text-lg" placeholder="0"/></div>
-              <div><label className="block text-sm font-bold text-slate-600 mb-2">العدد المطلوب</label><input type="number" name="quantity" value={inputs.quantity || ''} onChange={handleInput} className="w-full p-3 bg-green-50 border border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-center font-bold text-lg" placeholder="0"/></div>
-              {activeTab === 'roll' && (<div><label className="block text-sm font-bold text-slate-600 mb-2">عرض الرول (سم)</label><input type="number" name="rollWidth" value={inputs.rollWidth || ''} onChange={handleInput} className="w-full p-3 bg-green-50 border border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-center font-bold text-lg"/></div>)}
+              <div><label className="block text-sm font-bold text-slate-600 mb-2">العرض (سم)</label><input type="number" name="width" value={inputs.width || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0"/></div>
+              <div><label className="block text-sm font-bold text-slate-600 mb-2">الارتفاع (سم)</label><input type="number" name="height" value={inputs.height || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0"/></div>
+              <div><label className="block text-sm font-bold text-slate-600 mb-2">العدد المطلوب</label><input type="number" name="quantity" value={inputs.quantity || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0"/></div>
+              {activeTab === 'roll' && (<div><label className="block text-sm font-bold text-slate-600 mb-2">عرض الرول (سم)</label><input type="number" name="rollWidth" value={inputs.rollWidth || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg"/></div>)}
             </div>
           </div>
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="bg-slate-50 border-b border-slate-100 p-4"><h3 className="font-bold text-slate-700 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-red-500"></span> المخرجات (التكلفة)</h3></div>
+            <div className="bg-slate-50 border-b border-slate-100 p-4"><h3 className="font-bold text-slate-700 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#fa5732]"></span> المخرجات (التكلفة)</h3></div>
             <div className="p-6">
               {activeTab === 'roll' && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <ResultBox label="العدد في الصف" value={results.stickersPerRow} /><ResultBox label="عدد الصفوف" value={results.rowsNeeded} /><ResultBox label="الطول الأساسي (م)" value={results.baseLengthMeters?.toFixed(2)} /><ResultBox label="عدد الهوامش" value={results.marginCount} /><ResultBox label="الطول النهائي (م)" value={results.finalLength?.toFixed(2)} highlighted /><ResultBox label="المساحة (م²)" value={results.area?.toFixed(2)} />
                   <div className="col-span-2 md:col-span-4 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-2">
                     <div className="flex justify-between items-center text-slate-500"><span>السعر الأساسي:</span><span>{Math.round(results.finalPrice || 0)} ريال</span></div>
-                    {results.discountPercent > 0 && (<div className="flex justify-between items-center text-green-600"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
-                    <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-red-800 text-lg">السعر النهائي (بعد الخصم):</span><span className="font-black text-3xl text-red-600">{Math.round(results.priceAfterDiscount || 0)} <span className="text-sm font-medium">ريال</span></span></div>
+                    {results.discountPercent > 0 && (<div className="flex justify-between items-center text-[#337159]"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
+                    <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-[#337159] text-lg">السعر النهائي (بعد الخصم):</span><span className="font-black text-3xl text-[#fa5732]">{Math.round(results.priceAfterDiscount || 0)} <span className="text-sm font-medium">ريال</span></span></div>
                   </div>
                 </div>
               )}
@@ -1174,21 +1223,27 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                   <ResultBox label="سعر الورق (للفرخ)" value={results.sheetPriceUsed} />
                   {results.addonsCostPerSheet > 0 && <ResultBox label="سعر الإضافات (للفرخ)" value={results.addonsCostPerSheet} />}
                   
-                  {/* Foil Details if Enabled */}
                   {isFoilEnabled && (
-                    <div className="col-span-2 md:col-span-3 bg-pink-50 p-3 rounded-lg border border-pink-100 grid grid-cols-2 gap-2 mt-2">
-                        <div className="col-span-2 font-bold text-pink-700 text-xs mb-1">تفاصيل البصمة:</div>
+                    <div className="col-span-2 md:col-span-3 bg-[#b99ecb]/10 p-3 rounded-lg border border-[#b99ecb] grid grid-cols-2 gap-2 mt-2">
+                        <div className="col-span-2 font-bold text-[#337159] text-xs mb-1">تفاصيل البصمة:</div>
                         <div className="text-xs flex justify-between"><span>سعر القالب:</span> <span className="font-bold">{results.moldPrice?.toFixed(1)} ريال</span></div>
                         <div className="text-xs flex justify-between"><span>تكلفة التبصيم:</span> <span className="font-bold">{results.stampingCost?.toFixed(1)} ريال</span></div>
-                        <div className="text-xs flex justify-between border-t border-pink-200 pt-1 col-span-2 text-pink-800"><span>إجمالي البصمة:</span> <span className="font-bold">{results.foilCost?.toFixed(1)} ريال</span></div>
+                        <div className="text-xs flex justify-between border-t border-[#b99ecb] pt-1 col-span-2 text-[#337159]"><span>إجمالي البصمة:</span> <span className="font-bold">{results.foilCost?.toFixed(1)} ريال</span></div>
+                    </div>
+                  )}
+
+                  {results.savingsMessage && (
+                    <div className="col-span-2 md:col-span-3 bg-[#337159]/10 border border-[#337159] text-[#337159] p-3 rounded-lg text-xs font-bold flex items-center gap-2 mt-2">
+                        <Info className="w-4 h-4" />
+                        {results.savingsMessage}
                     </div>
                   )}
 
                   <ResultBox label="السعر قبل الضريبة" value={results.pricePreTax?.toFixed(2)} /><ResultBox label="قيمة الضريبة (15%)" value={results.tax?.toFixed(2)} />
                   <div className="col-span-2 md:col-span-3 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-2">
                     <div className="flex justify-between items-center text-slate-500"><span>السعر الأساسي:</span><span>{Math.round(results.finalPrice || 0)} ريال</span></div>
-                    {results.discountPercent > 0 && (<div className="flex justify-between items-center text-green-600"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
-                    <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-red-800 text-lg">السعر النهائي (بعد الخصم):</span><span className="font-black text-3xl text-red-600">{Math.round(results.priceAfterDiscount || 0)} <span className="text-sm font-medium">ريال</span></span></div>
+                    {results.discountPercent > 0 && (<div className="flex justify-between items-center text-[#337159]"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
+                    <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-[#337159] text-lg">السعر النهائي (بعد الخصم):</span><span className="font-black text-3xl text-[#fa5732]">{Math.round(results.priceAfterDiscount || 0)} <span className="text-sm font-medium">ريال</span></span></div>
                   </div>
                 </div>
               )}
@@ -1198,8 +1253,8 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                   <ResultBox label="أفرخ الطباعة" value={results.totalSheetsIncludingWaste} highlighted />
                   <ResultBox label="عدد الزنكات" value={results.numPlates} />
                   
-                  <div className="col-span-2 md:col-span-3 bg-cyan-50 p-3 rounded-lg border border-cyan-100 mt-2">
-                     <div className="text-xs font-bold text-cyan-800 mb-2 border-b border-cyan-200 pb-1">تفاصيل التكلفة:</div>
+                  <div className="col-span-2 md:col-span-3 bg-[#337159]/5 p-3 rounded-lg border border-[#337159]/20 mt-2">
+                     <div className="text-xs font-bold text-[#337159] mb-2 border-b border-[#337159]/10 pb-1">تفاصيل التكلفة:</div>
                      <div className="flex justify-between text-xs mb-1"><span>تكلفة الزنكات:</span> <b>{Math.round(results.plateCost)} ريال</b></div>
                      <div className="flex justify-between text-xs mb-1"><span>تكلفة الورق ({results.paperPriceUsed}/ألف):</span> <b>{Math.round(results.paperCost)} ريال</b></div>
                      <div className="flex justify-between text-xs"><span>تكلفة التشغيل:</span> <b>{Math.round(results.actualPrintCost)} ريال</b></div>
@@ -1207,8 +1262,8 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
 
                   <div className="col-span-2 md:col-span-3 mt-2 bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-2">
                     <div className="flex justify-between items-center text-slate-500"><span>السعر الأساسي:</span><span>{Math.round(results.finalPrice || 0)} ريال</span></div>
-                    {results.discountPercent > 0 && (<div className="flex justify-between items-center text-green-600"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
-                    <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-red-800 text-lg">السعر النهائي (شامل الهامش):</span><span className="font-black text-3xl text-red-600">{Math.round(results.priceAfterDiscount || 0)} <span className="text-sm font-medium">ريال</span></span></div>
+                    {results.discountPercent > 0 && (<div className="flex justify-between items-center text-[#337159]"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
+                    <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-[#337159] text-lg">السعر النهائي (شامل الهامش):</span><span className="font-black text-3xl text-[#fa5732]">{Math.round(results.priceAfterDiscount || 0)} <span className="text-sm font-medium">ريال</span></span></div>
                   </div>
                 </div>
               )}
@@ -1217,8 +1272,8 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                   <ResultBox label="العدد في الصف" value={results.itemsPerRow} /><ResultBox label="عدد الصفوف" value={results.totalRows} /><ResultBox label="الأمتار المستهلكة" value={results.metersConsumed?.toFixed(3)} highlighted />
                   <div className="col-span-2 md:col-span-3 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-2">
                     <div className="flex justify-between items-center text-slate-500"><span>السعر الأساسي:</span><span>{Math.round(results.finalPrice || 0)} ريال</span></div>
-                    {results.discountPercent > 0 && (<div className="flex justify-between items-center text-green-600"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
-                    <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-red-800 text-lg">السعر النهائي (بعد الخصم):</span><span className="font-black text-3xl text-red-600">{Math.round(results.priceAfterDiscount || 0)} <span className="text-sm font-medium">ريال</span></span></div>
+                    {results.discountPercent > 0 && (<div className="flex justify-between items-center text-[#337159]"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
+                    <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-[#337159] text-lg">السعر النهائي (بعد الخصم):</span><span className="font-black text-3xl text-[#fa5732]">{Math.round(results.priceAfterDiscount || 0)} <span className="text-sm font-medium">ريال</span></span></div>
                   </div>
                 </div>
               )}
@@ -1228,7 +1283,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                 <button 
                   onClick={handleSaveQuote} 
                   disabled={savingLog || !results.finalPrice}
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-8 rounded-xl font-bold shadow-lg flex items-center gap-2 disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
+                  className="bg-[#fa5732] hover:bg-[#d94a29] text-white py-3 px-8 rounded-xl font-bold shadow-lg flex items-center gap-2 disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
                 >
                   <FileText className="w-5 h-5" />
                   {savingLog ? 'جاري الحفظ...' : 'حفظ التسعيرة'}
