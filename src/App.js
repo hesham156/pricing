@@ -930,14 +930,31 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
 
       const sheetsNeeded = perSheet > 0 ? Math.ceil(qty / perSheet) : 0; 
       
+      // --- Waste Logic (الهالك) ---
+      let wasteSheets = 0;
+      if (sheetsNeeded > 0) {
+          if (sheetsNeeded <= 100) {
+              wasteSheets = 5;
+          } else if (sheetsNeeded <= 250) {
+              wasteSheets = 10;
+          } else if (sheetsNeeded <= 500) {
+              wasteSheets = 20;
+          } else {
+              wasteSheets = 30; // 501 to 1000+
+          }
+      }
+      
+      const totalSheetsWithWaste = sheetsNeeded + wasteSheets;
+
       // Check if design is larger than sheet
       let error = null;
       if (stickerW > 0 && stickerH > 0 && perSheet === 0) {
           error = `عفواً، مقاس التصميم (${stickerW}×${stickerH}) أكبر من مقاس الورق المختار (${sheetW}×${sheetH}) مع الهوامش. يرجى اختيار ورق أكبر أو تقليل المقاس.`;
       }
       
-      const basePrice = sheetsNeeded * unitPrice;
-      const totalAddonsPrice = sheetsNeeded * addonsCostPerSheet;
+      // Calculate Price based on Total Sheets (Net + Waste)
+      const basePrice = totalSheetsWithWaste * unitPrice;
+      const totalAddonsPrice = totalSheetsWithWaste * addonsCostPerSheet;
       
       // Foil Calculations
       let foilCost = 0;
@@ -949,11 +966,22 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
           const fH = foilInputs.height > 0 ? foilInputs.height : stickerH;
           const foilArea = fW * fH;
           
+          // 1. حساب سعر القالب (Mold)
           moldPrice = foilArea * (prices.foilMoldPricePerCm2 || 1.15);
           if (moldPrice < (prices.foilMinMoldPrice || 150)) {
               moldPrice = prices.foilMinMoldPrice || 150;
           }
-          stampingCost = qty * (prices.foilStampingUnitPrice || 0.40);
+
+          // 2. حساب سعر التبصيم (Stamping)
+          // القاعدة: الحد الأدنى 200 ريال، أو السعر المحسوب أيهما أعلى
+          let rawStampingCost = qty * (prices.foilStampingUnitPrice || 0.40);
+          
+          if (rawStampingCost < 200) {
+              stampingCost = 200; // تثبيت السعر على 200 إذا كان أقل
+          } else {
+              stampingCost = rawStampingCost; // اعتماد السعر الأعلى
+          }
+          
           foilCost = moldPrice + stampingCost;
       }
       
@@ -983,8 +1011,17 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
           const worstCount = Math.min(count1, count2);
           if (worstCount > 0) {
               const worstSheetsNeeded = Math.ceil(qty / worstCount);
-              const worstBasePrice = worstSheetsNeeded * unitPrice;
-              const worstAddons = worstSheetsNeeded * addonsCostPerSheet;
+              
+              // Calc worst case waste
+              let worstWaste = 0;
+              if (worstSheetsNeeded <= 100) worstWaste = 5;
+              else if (worstSheetsNeeded <= 250) worstWaste = 10;
+              else if (worstSheetsNeeded <= 500) worstWaste = 20;
+              else worstWaste = 30;
+
+              const worstTotalSheets = worstSheetsNeeded + worstWaste;
+              const worstBasePrice = worstTotalSheets * unitPrice;
+              const worstAddons = worstTotalSheets * addonsCostPerSheet;
               
               const worstPricePreTax = worstBasePrice + worstAddons + foilCost + spotUvCost;
               const worstTax = worstPricePreTax * taxRate;
@@ -1008,7 +1045,8 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
       if (isSpotUvEnabled) details += ` + سبوت يو في`;
 
       return { 
-          perSheet, sheetsNeeded, pricePreTax, tax, finalPrice, sheetPriceUsed: unitPrice, addonsCostPerSheet, totalAddonsPrice, 
+          perSheet, sheetsNeeded, wasteSheets, totalSheetsWithWaste, // Added new values
+          pricePreTax, tax, finalPrice, sheetPriceUsed: unitPrice, addonsCostPerSheet, totalAddonsPrice, 
           dims: `${sheetW}×${sheetH}`, discountPercent, discountAmount, priceAfterDiscount, details,
           foilCost, moldPrice, stampingCost, savingsMessage, spotUvCost, error
       };
@@ -1218,7 +1256,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                                     <input type="number" name="width" value={foilInputs.width || ''} onChange={handleFoilInput} className="w-full p-2 text-sm border rounded text-center outline-none focus:border-[#fa5732]" placeholder="0" />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] text-slate-500">طول البصمة (سم)</label>
+                                    <label className="text-[10px] text-slate-500">ارتفاع البصمة (سم)</label>
                                     <input type="number" name="height" value={foilInputs.height || ''} onChange={handleFoilInput} className="w-full p-2 text-sm border rounded text-center outline-none focus:border-[#fa5732]" placeholder="0" />
                                 </div>
                             </div>
@@ -1279,7 +1317,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
               )}
 
               <div><label className="block text-sm font-bold text-slate-600 mb-2">العرض (سم)</label><input type="number" name="width" value={inputs.width || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0"/></div>
-              <div><label className="block text-sm font-bold text-slate-600 mb-2">الطول (سم)</label><input type="number" name="height" value={inputs.height || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0"/></div>
+              <div><label className="block text-sm font-bold text-slate-600 mb-2">الارتفاع (سم)</label><input type="number" name="height" value={inputs.height || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0"/></div>
               <div><label className="block text-sm font-bold text-slate-600 mb-2">العدد المطلوب</label><input type="number" name="quantity" value={inputs.quantity || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0"/></div>
               {activeTab === 'roll' && (<div><label className="block text-sm font-bold text-slate-600 mb-2">عرض الرول (سم)</label><input type="number" name="rollWidth" value={inputs.rollWidth || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg"/></div>)}
 
@@ -1319,7 +1357,11 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                   )}
                   {activeTab === 'digital' && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      <ResultBox label="العدد في الورق" value={results.perSheet} /><ResultBox label="عدد الورق المطلوب" value={results.sheetsNeeded} highlighted /><ResultBox label="أبعاد الورق" value={results.dims} />
+                      <ResultBox label="العدد في الورق" value={results.perSheet} />
+                      <ResultBox label="عدد الورق (صافي)" value={results.sheetsNeeded} />
+                      <ResultBox label="هالك تشغيل (+)" value={results.wasteSheets} highlighted />
+                      <ResultBox label="إجمالي الورق المحتسب" value={results.totalSheetsWithWaste} />
+                      <ResultBox label="أبعاد الورق" value={results.dims} />
                       <ResultBox label="سعر الورق (للورقة)" value={results.sheetPriceUsed} />
                       {results.addonsCostPerSheet > 0 && <ResultBox label="سعر الإضافات (للورق)" value={results.addonsCostPerSheet} />}
                       
