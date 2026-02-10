@@ -1102,17 +1102,42 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
             ups, sheetsNeeded, totalSheetsIncludingWaste, plateCost, paperCost, actualPrintCost, finalPrice, discountPercent, discountAmount, priceAfterDiscount, details, numPlates, paperPriceUsed: paperPricePer1000
         };
     }
-    else if (activeTab === 'uvdtf') {
-      const h = inputs.height; const w = inputs.width; const qty = inputs.quantity; const itemsPerRow = Math.floor(50 / (w + 0.2)); const totalRows = itemsPerRow > 0 ? Math.ceil(qty / itemsPerRow) : 0; const rawLength = (totalRows * (h + 0.2)) / 100; const marginPart = Math.floor(rawLength / 0.5) * 0.05; const metersConsumed = (rawLength + marginPart) * 0.5; 
+     else if (activeTab === 'uvdtf') {
+      const L = inputs.width;  // الطول (B2 في إكسل)
+      const W = inputs.height; // العرض (C2 في إكسل)
+      const qty = inputs.quantity; // الكمية (D2 في إكسل)
+      const rollW = 55; // المسطح الثابت
       
-      // If manual mode is on, use manualPrice (or 0 if empty). Else use system price.
-      unitPrice = isManualMode ? manualPrice : (prices.uvDtfPrice || 0);
+      // INT(55 / (B2 + 0.5)) -> عدد الملصقات في عرض المسطح
+      const stickersPerRow = Math.floor(rollW / (L + 0.5));
+      
+      if (stickersPerRow <= 0 && L > 0) return { error: "الاستيكر أعرض من المسطح (55 سم)" };
+      
+      // CEILING(D2 / stickersPerRow, 1) -> عدد الصفوف
+      const totalRows = stickersPerRow > 0 ? Math.ceil(qty / stickersPerRow) : 0;
+      
+      // ROUND(totalRows * (W + 0.5) / 100, 2) -> الأمتار المستهلكة (E2 في إكسل)
+      const metersConsumed = parseFloat(((totalRows * (W + 0.5)) / 100).toFixed(2));
+      
+      // تحديد سعر المتر التلقائي (F2) بناءً على شرائح الصورة
+      let tierPrice = 150;
+      if (metersConsumed >= 4 && metersConsumed <= 10) tierPrice = 120;
+      else if (metersConsumed > 10) tierPrice = 95;
+      
+      unitPrice = isManualMode ? manualPrice : tierPrice;
 
-      const finalPrice = (metersConsumed * unitPrice) * marginRate;
-      const discountPercent = getDiscountPercent(metersConsumed, prices.uvDtfDiscounts);
-      const discountAmount = finalPrice * (discountPercent / 100);
-      const priceAfterDiscount = finalPrice - discountAmount;
-      return { itemsPerRow, totalRows, metersConsumed, finalPrice, discountPercent, discountAmount, priceAfterDiscount, details: `UV DTF: ${w}x${h}cm (كمية: ${qty})` };
+      // السعر شامل الضريبة = E2 * F2 * 1.15
+      const finalPrice = metersConsumed * unitPrice * 1.15;
+      
+      return { 
+        stickersPerRow, 
+        totalRows, 
+        metersConsumed, 
+        unitPriceUsed: unitPrice,
+        finalPrice, 
+        priceAfterDiscount: finalPrice, 
+        details: `UV DTF: ${L}x${W}cm (كمية: ${qty})` 
+      };
     }
     return {};
   }, [inputs, foilInputs, prices, activeTab, selectedPaperIndex, selectedSheetSizeIndex, selectedAddonsIndices, customUnitPrice, generalSettings, activePapers, isFoilEnabled, isSpotUvEnabled, activeOffsetPapers, selectedOffsetPaperIndex]);
