@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
+import {
+  getAuth,
   signInAnonymously
 } from 'firebase/auth';
-import { 
-  getFirestore, 
-  doc, 
-  onSnapshot, 
-  updateDoc, 
-  setDoc, 
+import {
+  getFirestore,
+  doc,
+  onSnapshot,
+  updateDoc,
+  setDoc,
   getDoc,
   addDoc,
   collection,
   arrayUnion
 } from 'firebase/firestore';
-import { LogOut, Lock, Save, Palette, Scroll, Layout, Trash2, Plus, Maximize, User, Mail, Key, Users, UserPlus, Database, FileJson, Layers, Percent, History, FileText, ArrowRight, ToggleLeft, ToggleRight, Sliders, Eye, EyeOff, Stamp, Factory, Ban, Info, Sparkles, AlertTriangle } from 'lucide-react';
+import { LogOut, Lock, Save, Palette, Scroll, Layout, Trash2, Plus, Maximize, Mail, Key, Users, UserPlus, Database, FileJson, Layers, Percent, History, FileText, ArrowRight, ToggleLeft, ToggleRight, Sliders, Eye, EyeOff, Stamp, Factory, Ban, Info, Sparkles, AlertTriangle } from 'lucide-react';
 
 // --- Firebase Setup ---
 const firebaseConfig = {
@@ -32,7 +32,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const appId = 'printing-app-v1'; 
+const appId = 'printing-app-v1';
 const LOGO_URL = "https://cdn.salla.sa/cdn-cgi/image/fit=scale-down,width=400,height=400,onerror=redirect,format=auto/XWZKA/YaMTPHLOL2Te8CL4gQbZmq17ktijebIHHKZRx6jp.png";
 
 // --- Constants ---
@@ -105,10 +105,10 @@ const ResultBox = ({ label, value, highlighted = false }) => (
 );
 
 const AuthScreen = ({ onLoginSuccess, onCancel }) => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -131,14 +131,14 @@ const AuthScreen = ({ onLoginSuccess, onCancel }) => {
       const usersDocRef = doc(db, ...USERS_DB_PATH);
       const usersSnap = await getDoc(usersDocRef);
       let currentUsers = [];
-      
+
       if (usersSnap.exists()) {
         currentUsers = usersSnap.data().list || [];
       }
 
       if (isLogin) {
         const foundUser = currentUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-        
+
         if (foundUser) {
           if (foundUser.role === 'admin') {
             onLoginSuccess(foundUser);
@@ -159,7 +159,7 @@ const AuthScreen = ({ onLoginSuccess, onCancel }) => {
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4" dir="rtl">
       <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl max-w-md w-full relative border-t-4 border-[#337159]">
-        <button 
+        <button
           onClick={onCancel}
           className="absolute top-4 left-4 text-slate-400 hover:text-[#337159] flex items-center gap-1 text-sm font-bold transition-colors"
         >
@@ -168,14 +168,14 @@ const AuthScreen = ({ onLoginSuccess, onCancel }) => {
 
         <div className="text-center mb-8 mt-4">
           <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 flex items-center justify-center p-1">
-             <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" />
+            <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-[#337159]">دخول المسؤولين</h1>
           <p className="text-slate-500 text-sm mt-1">يرجى تسجيل الدخول للوصول للإعدادات</p>
         </div>
 
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center border border-red-100">{error}</div>}
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-[#337159] mb-1">البريد الإلكتروني</label>
@@ -258,9 +258,9 @@ const UserManagement = () => {
         <h4 className="font-bold text-[#337159] mb-4 flex items-center gap-2"><UserPlus className="w-5 h-5" /> إضافة مستخدم جديد</h4>
         {msg && <div className={`p-3 rounded-lg mb-4 text-sm font-bold text-center ${msg.includes('بنجاح') ? 'bg-green-100 text-green-800' : 'bg-red-200 text-red-800'}`}>{msg}</div>}
         <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label className="block text-xs font-bold text-slate-600 mb-1">الاسم</label><input type="text" required value={newUserName} onChange={e => setNewUserName(e.target.value)} className="w-full p-2 rounded border border-[#b99ecb] focus:ring-2 focus:ring-[#337159] outline-none"/></div>
-          <div><label className="block text-xs font-bold text-slate-600 mb-1">البريد الإلكتروني</label><input type="email" required value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} className="w-full p-2 rounded border border-[#b99ecb] focus:ring-2 focus:ring-[#337159] outline-none"/></div>
-          <div><label className="block text-xs font-bold text-slate-600 mb-1">كلمة المرور</label><input type="text" required value={newUserPass} onChange={e => setNewUserPass(e.target.value)} className="w-full p-2 rounded border border-[#b99ecb] focus:ring-2 focus:ring-[#337159] outline-none" placeholder="كلمة المرور"/></div>
+          <div><label className="block text-xs font-bold text-slate-600 mb-1">الاسم</label><input type="text" required value={newUserName} onChange={e => setNewUserName(e.target.value)} className="w-full p-2 rounded border border-[#b99ecb] focus:ring-2 focus:ring-[#337159] outline-none" /></div>
+          <div><label className="block text-xs font-bold text-slate-600 mb-1">البريد الإلكتروني</label><input type="email" required value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} className="w-full p-2 rounded border border-[#b99ecb] focus:ring-2 focus:ring-[#337159] outline-none" /></div>
+          <div><label className="block text-xs font-bold text-slate-600 mb-1">كلمة المرور</label><input type="text" required value={newUserPass} onChange={e => setNewUserPass(e.target.value)} className="w-full p-2 rounded border border-[#b99ecb] focus:ring-2 focus:ring-[#337159] outline-none" placeholder="كلمة المرور" /></div>
           <div><label className="block text-xs font-bold text-slate-600 mb-1">الدور (الصلاحية)</label><select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="w-full p-2 rounded border border-[#b99ecb] focus:ring-2 focus:ring-[#337159] outline-none bg-white"><option value="employee">موظف (حاسبة فقط)</option><option value="admin">مسؤول (تحكم كامل)</option></select></div>
           <div className="md:col-span-2 mt-2"><button type="submit" disabled={loading} className="w-full bg-[#337159] hover:bg-[#2a5c48] text-white py-2 rounded-lg font-bold shadow transition-colors disabled:opacity-50">{loading ? 'جاري الإنشاء...' : 'إنشاء الحساب'}</button></div>
         </form>
@@ -349,11 +349,11 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
   const [localPrices, setLocalPrices] = useState(prices);
   const [localGeneral, setLocalGeneral] = useState(generalSettings || { allowPriceOverride: false });
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('roll'); 
-  
+  const [activeTab, setActiveTab] = useState('roll');
+
   const [newPaperName, setNewPaperName] = useState('');
   const [newPaperPrice, setNewPaperPrice] = useState('');
-  
+
   // Offset specific states for new items
   const [newOffsetPaperName, setNewOffsetPaperName] = useState('');
   const [newOffsetPaperPrice, setNewOffsetPaperPrice] = useState('');
@@ -369,12 +369,12 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
     if (!updatedPrices.uvDtfDiscounts) updatedPrices.uvDtfDiscounts = [];
     if (!updatedPrices.offsetPaperTypes) updatedPrices.offsetPaperTypes = [];
     if (!updatedPrices.offsetDiscounts) updatedPrices.offsetDiscounts = [];
-    
+
     // Default Offset Values
     if (!updatedPrices.offsetPlatePrice) updatedPrices.offsetPlatePrice = 50;
     if (!updatedPrices.offsetPrintPrice1000) updatedPrices.offsetPrintPrice1000 = 80;
     if (!updatedPrices.offsetMinQty) updatedPrices.offsetMinQty = 1000;
-    
+
     // Default Foil Values
     if (!updatedPrices.foilMoldPricePerCm2) updatedPrices.foilMoldPricePerCm2 = 1.15;
     if (!updatedPrices.foilMinMoldPrice) updatedPrices.foilMinMoldPrice = 150;
@@ -382,19 +382,19 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
 
     // Show Digital Paper Field Toggle Default
     if (updatedPrices.showDigitalPaperField === undefined) updatedPrices.showDigitalPaperField = true;
-    
+
     // Updated Digital Sheet Sizes Default (Long Sheet)
     if (!updatedPrices.digitalSheetSizes || updatedPrices.digitalSheetSizes.length === 0) {
-        updatedPrices.digitalSheetSizes = [
-            { name: 'ربع ورق (33×48)', width: 33, height: 48 },
-            { name: 'شيت طويل (33×100)', width: 33, height: 100 }
-        ];
+      updatedPrices.digitalSheetSizes = [
+        { name: 'ربع ورق (33×48)', width: 33, height: 48 },
+        { name: 'شيت طويل (33×100)', width: 33, height: 100 }
+      ];
     } else {
-        const hasFullSheet = updatedPrices.digitalSheetSizes.some(s => s.width === 70 && s.height === 100);
-        if (hasFullSheet) {
-             updatedPrices.digitalSheetSizes = updatedPrices.digitalSheetSizes.filter(s => !(s.width === 70 && s.height === 100));
-             updatedPrices.digitalSheetSizes.push({ name: 'شيت طويل (33×100)', width: 33, height: 100 });
-        }
+      const hasFullSheet = updatedPrices.digitalSheetSizes.some(s => s.width === 70 && s.height === 100);
+      if (hasFullSheet) {
+        updatedPrices.digitalSheetSizes = updatedPrices.digitalSheetSizes.filter(s => !(s.width === 70 && s.height === 100));
+        updatedPrices.digitalSheetSizes.push({ name: 'شيت طويل (33×100)', width: 33, height: 100 });
+      }
     }
 
     setLocalPrices(updatedPrices);
@@ -404,7 +404,7 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
     if (generalSettings) setLocalGeneral(generalSettings);
   }, [generalSettings]);
 
-  const handleChange = (key, value) => { setLocalPrices(prev => ({ ...prev, [key]: value })); }; 
+  const handleChange = (key, value) => { setLocalPrices(prev => ({ ...prev, [key]: value })); };
 
   const handleSave = async () => {
     setSaving(true);
@@ -425,10 +425,10 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
     setLocalPrices(prev => ({ ...prev, digitalPaperTypes: [...currentPapers, { name: newPaperName, price: parseFloat(newPaperPrice), active: true }] }));
     setNewPaperName(''); setNewPaperPrice('');
   };
-  const handleRemovePaper = (i) => setLocalPrices(prev => ({...prev, digitalPaperTypes: prev.digitalPaperTypes.filter((_, idx) => idx !== i)}));
-  
+  const handleRemovePaper = (i) => setLocalPrices(prev => ({ ...prev, digitalPaperTypes: prev.digitalPaperTypes.filter((_, idx) => idx !== i) }));
+
   const handlePaperChange = (i, f, v) => {
-    const up = [...localPrices.digitalPaperTypes]; 
+    const up = [...localPrices.digitalPaperTypes];
     if (f === 'price') {
       up[i][f] = parseFloat(v);
     } else if (f === 'active') {
@@ -436,7 +436,7 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
     } else {
       up[i][f] = v;
     }
-    setLocalPrices(prev => ({...prev, digitalPaperTypes: up}));
+    setLocalPrices(prev => ({ ...prev, digitalPaperTypes: up }));
   };
 
   // --- Offset Paper Management ---
@@ -446,16 +446,16 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
     setLocalPrices(prev => ({ ...prev, offsetPaperTypes: [...currentPapers, { name: newOffsetPaperName, price: parseFloat(newOffsetPaperPrice), active: true }] }));
     setNewOffsetPaperName(''); setNewOffsetPaperPrice('');
   };
-  const handleRemoveOffsetPaper = (i) => setLocalPrices(prev => ({...prev, offsetPaperTypes: prev.offsetPaperTypes.filter((_, idx) => idx !== i)}));
+  const handleRemoveOffsetPaper = (i) => setLocalPrices(prev => ({ ...prev, offsetPaperTypes: prev.offsetPaperTypes.filter((_, idx) => idx !== i) }));
   const handleOffsetPaperChange = (i, f, v) => {
     const up = [...localPrices.offsetPaperTypes];
     up[i][f] = f === 'price' ? parseFloat(v) : (f === 'active' ? v : v);
-    setLocalPrices(prev => ({...prev, offsetPaperTypes: up}));
+    setLocalPrices(prev => ({ ...prev, offsetPaperTypes: up }));
   };
 
   const handleSheetSizeChange = (i, f, v) => {
     const us = [...localPrices.digitalSheetSizes]; us[i][f] = f === 'name' ? v : parseFloat(v);
-    setLocalPrices(prev => ({...prev, digitalSheetSizes: us}));
+    setLocalPrices(prev => ({ ...prev, digitalSheetSizes: us }));
   };
   const safeHandleAddAddon = () => {
     if (!newAddonName || !newAddonPrice) return;
@@ -463,10 +463,10 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
     setLocalPrices(prev => ({ ...prev, digitalAddons: [...currentAddons, { name: newAddonName, price: parseFloat(newAddonPrice) }] }));
     setNewAddonName(''); setNewAddonPrice('');
   };
-  const handleRemoveAddon = (i) => setLocalPrices(prev => ({...prev, digitalAddons: prev.digitalAddons.filter((_, idx) => idx !== i)}));
+  const handleRemoveAddon = (i) => setLocalPrices(prev => ({ ...prev, digitalAddons: prev.digitalAddons.filter((_, idx) => idx !== i) }));
   const handleAddonChange = (i, f, v) => {
     const ua = [...localPrices.digitalAddons]; ua[i][f] = f === 'price' ? parseFloat(v) : v;
-    setLocalPrices(prev => ({...prev, digitalAddons: ua}));
+    setLocalPrices(prev => ({ ...prev, digitalAddons: ua }));
   };
   const handleDiscountChange = (tab, newDiscounts) => setLocalPrices(prev => ({ ...prev, [tab]: newDiscounts }));
 
@@ -502,8 +502,8 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
           <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex items-center gap-3 mb-6 text-[#337159] border-b border-[#337159]/20 pb-4"><Scroll className="w-6 h-6" /><h3 className="font-bold text-xl">إعدادات خامات الرول</h3></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div><label className="block text-sm font-medium text-slate-600 mb-2">سعر المتر المربع الأساسي (ريال)</label><input type="number" value={localPrices.rollUnitPrice || ''} onChange={(e) => handleChange('rollUnitPrice', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg"/></div>
-              <div><label className="block text-sm font-medium text-slate-600 mb-2">عرض الرول الافتراضي (سم)</label><input type="number" value={localPrices.defaultRollWidth || ''} onChange={(e) => handleChange('defaultRollWidth', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg"/></div>
+              <div><label className="block text-sm font-medium text-slate-600 mb-2">سعر المتر المربع الأساسي (ريال)</label><input type="number" value={localPrices.rollUnitPrice || ''} onChange={(e) => handleChange('rollUnitPrice', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg" /></div>
+              <div><label className="block text-sm font-medium text-slate-600 mb-2">عرض الرول الافتراضي (سم)</label><input type="number" value={localPrices.defaultRollWidth || ''} onChange={(e) => handleChange('defaultRollWidth', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg" /></div>
             </div>
             <DiscountManager discounts={localPrices.rollDiscounts} onChange={(newDiscounts) => handleDiscountChange('rollDiscounts', newDiscounts)} unitLabel="متر مربع (المساحة)" />
           </div>
@@ -512,14 +512,14 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
         {activeTab === 'digital' && (
           <div className="space-y-8 animate-in fade-in duration-300">
             <div className="flex items-center gap-3 mb-4 text-[#337159] border-b border-[#337159]/20 pb-4"><Layout className="w-6 h-6" /><h3 className="font-bold text-xl">إعدادات خامات الديجيتال</h3></div>
-            
+
             {/* Toggle Show/Hide Paper Field */}
             <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between mb-6">
               <div>
                 <h4 className="font-bold text-slate-800 mb-1 text-sm md:text-base">إظهار قائمة "نوع الورق" في الحاسبة</h4>
                 <p className="text-xs md:text-sm text-slate-500">عند التعطيل، سيتم إخفاء قائمة اختيار الورق وسيتم اعتماد السعر الافتراضي أو أول ورق في القائمة.</p>
               </div>
-              <button 
+              <button
                 onClick={() => handleChange('showDigitalPaperField', !localPrices.showDigitalPaperField)}
                 className={`p-2 rounded-full transition-colors ${localPrices.showDigitalPaperField !== false ? 'bg-[#337159]/10 text-[#337159]' : 'bg-slate-100 text-slate-400'}`}
               >
@@ -531,12 +531,12 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
               <div className="space-y-8">
                 {/* 1. Foil Settings in Digital */}
                 <div className="bg-[#b99ecb]/5 p-6 rounded-xl border border-[#b99ecb]/30">
-                    <div className="flex items-center gap-2 mb-4 text-[#337159]"><Stamp className="w-5 h-5" /><h4 className="font-bold text-lg">إعدادات البصمة (Foil)</h4></div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div><label className="block text-xs font-bold text-slate-600 mb-1">سعر 1 سم² للقالب</label><input type="number" value={localPrices.foilMoldPricePerCm2 || ''} onChange={(e) => handleChange('foilMoldPricePerCm2', e.target.value)} className="w-full p-2 border border-[#b99ecb] rounded focus:ring-1 focus:ring-[#337159] outline-none text-sm"/></div>
-                        <div><label className="block text-xs font-bold text-slate-600 mb-1">الحد الأدنى للقالب</label><input type="number" value={localPrices.foilMinMoldPrice || ''} onChange={(e) => handleChange('foilMinMoldPrice', e.target.value)} className="w-full p-2 border border-[#b99ecb] rounded focus:ring-1 focus:ring-[#337159] outline-none text-sm"/></div>
-                        <div><label className="block text-xs font-bold text-slate-600 mb-1">سعر التبصيم (للحبة)</label><input type="number" value={localPrices.foilStampingUnitPrice || ''} onChange={(e) => handleChange('foilStampingUnitPrice', e.target.value)} className="w-full p-2 border border-[#b99ecb] rounded focus:ring-1 focus:ring-[#337159] outline-none text-sm"/></div>
-                    </div>
+                  <div className="flex items-center gap-2 mb-4 text-[#337159]"><Stamp className="w-5 h-5" /><h4 className="font-bold text-lg">إعدادات البصمة (Foil)</h4></div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label className="block text-xs font-bold text-slate-600 mb-1">سعر 1 سم² للقالب</label><input type="number" value={localPrices.foilMoldPricePerCm2 || ''} onChange={(e) => handleChange('foilMoldPricePerCm2', e.target.value)} className="w-full p-2 border border-[#b99ecb] rounded focus:ring-1 focus:ring-[#337159] outline-none text-sm" /></div>
+                    <div><label className="block text-xs font-bold text-slate-600 mb-1">الحد الأدنى للقالب</label><input type="number" value={localPrices.foilMinMoldPrice || ''} onChange={(e) => handleChange('foilMinMoldPrice', e.target.value)} className="w-full p-2 border border-[#b99ecb] rounded focus:ring-1 focus:ring-[#337159] outline-none text-sm" /></div>
+                    <div><label className="block text-xs font-bold text-slate-600 mb-1">سعر التبصيم (للحبة)</label><input type="number" value={localPrices.foilStampingUnitPrice || ''} onChange={(e) => handleChange('foilStampingUnitPrice', e.target.value)} className="w-full p-2 border border-[#b99ecb] rounded focus:ring-1 focus:ring-[#337159] outline-none text-sm" /></div>
+                  </div>
                 </div>
 
                 {/* 2. Sheet Sizes */}
@@ -545,10 +545,10 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                   <div className="space-y-4">
                     {localPrices.digitalSheetSizes?.map((size, idx) => (
                       <div key={idx} className="bg-white p-4 rounded-lg border border-[#b99ecb]/30 shadow-sm">
-                        <div className="mb-3"><label className="text-xs text-slate-400 block mb-1">اسم المقاس</label><input type="text" value={size.name} onChange={(e) => handleSheetSizeChange(idx, 'name', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-[#337159] outline-none font-bold text-slate-700"/></div>
+                        <div className="mb-3"><label className="text-xs text-slate-400 block mb-1">اسم المقاس</label><input type="text" value={size.name} onChange={(e) => handleSheetSizeChange(idx, 'name', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-[#337159] outline-none font-bold text-slate-700" /></div>
                         <div className="grid grid-cols-2 gap-4">
-                          <div><label className="text-xs text-slate-400 block mb-1">العرض</label><input type="number" value={size.width} onChange={(e) => handleSheetSizeChange(idx, 'width', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-[#337159] outline-none text-center"/></div>
-                          <div><label className="text-xs text-slate-400 block mb-1">الطول</label><input type="number" value={size.height} onChange={(e) => handleSheetSizeChange(idx, 'height', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-[#337159] outline-none text-center"/></div>
+                          <div><label className="text-xs text-slate-400 block mb-1">العرض</label><input type="number" value={size.width} onChange={(e) => handleSheetSizeChange(idx, 'width', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-[#337159] outline-none text-center" /></div>
+                          <div><label className="text-xs text-slate-400 block mb-1">الطول</label><input type="number" value={size.height} onChange={(e) => handleSheetSizeChange(idx, 'height', e.target.value)} className="w-full p-2 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-[#337159] outline-none text-center" /></div>
                         </div>
                       </div>
                     ))}
@@ -577,15 +577,15 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                 <div className="flex-1 bg-[#337159]/5 rounded-xl p-4 mb-4 overflow-y-auto min-h-[300px] border border-[#337159]/10">
                   {localPrices.digitalPaperTypes?.map((paper, idx) => (
                     <div key={idx} className={`flex items-center gap-3 bg-white p-3 mb-2 rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-shadow ${paper.active === false ? 'opacity-50' : ''}`}>
-                      <button 
+                      <button
                         onClick={() => handlePaperChange(idx, 'active', paper.active === false ? true : false)}
                         className={`p-1 rounded-full ${paper.active !== false ? 'text-[#337159] hover:bg-green-50' : 'text-slate-400 hover:bg-slate-100'}`}
                         title={paper.active !== false ? 'تعطيل' : 'تفعيل'}
                       >
                         {paper.active !== false ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                       </button>
-                      <div className="flex-1"><label className="text-[10px] text-slate-400 block mb-1">اسم الورق</label><input type="text" value={paper.name} onChange={(e) => handlePaperChange(idx, 'name', e.target.value)} className="w-full text-sm font-bold text-slate-700 border-b border-transparent focus:border-[#337159] outline-none bg-transparent hover:bg-slate-50 p-1"/></div>
-                      <div className="w-20"><label className="text-[10px] text-slate-400 block mb-1">السعر (ريال)</label><input type="number" value={paper.price} onChange={(e) => handlePaperChange(idx, 'price', e.target.value)} className="w-full text-sm font-bold text-[#337159] bg-[#337159]/10 border border-[#337159]/20 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-[#337159]"/></div>
+                      <div className="flex-1"><label className="text-[10px] text-slate-400 block mb-1">اسم الورق</label><input type="text" value={paper.name} onChange={(e) => handlePaperChange(idx, 'name', e.target.value)} className="w-full text-sm font-bold text-slate-700 border-b border-transparent focus:border-[#337159] outline-none bg-transparent hover:bg-slate-50 p-1" /></div>
+                      <div className="w-20"><label className="text-[10px] text-slate-400 block mb-1">السعر (ريال)</label><input type="number" value={paper.price} onChange={(e) => handlePaperChange(idx, 'price', e.target.value)} className="w-full text-sm font-bold text-[#337159] bg-[#337159]/10 border border-[#337159]/20 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-[#337159]" /></div>
                       <button onClick={() => handleRemovePaper(idx)} className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   ))}
@@ -593,8 +593,8 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                 <div className="bg-slate-100 p-4 rounded-xl border border-slate-200 mb-4">
                   <h5 className="text-sm font-bold text-slate-600 mb-3">إضافة نوع جديد</h5>
                   <div className="flex gap-3 items-end">
-                    <div className="flex-1"><label className="block text-xs text-slate-500 mb-1">اسم الخامة</label><input type="text" value={newPaperName} onChange={(e) => setNewPaperName(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#337159] outline-none" placeholder="مثال: كوشيه 300"/></div>
-                    <div className="w-24"><label className="block text-xs text-slate-500 mb-1">السعر</label><input type="number" value={newPaperPrice} onChange={(e) => setNewPaperPrice(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#337159] outline-none" placeholder="0"/></div>
+                    <div className="flex-1"><label className="block text-xs text-slate-500 mb-1">اسم الخامة</label><input type="text" value={newPaperName} onChange={(e) => setNewPaperName(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#337159] outline-none" placeholder="مثال: كوشيه 300" /></div>
+                    <div className="w-24"><label className="block text-xs text-slate-500 mb-1">السعر</label><input type="number" value={newPaperPrice} onChange={(e) => setNewPaperPrice(e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#337159] outline-none" placeholder="0" /></div>
                     <button onClick={safeHandleAddPaper} className="bg-[#337159] hover:bg-[#2a5c48] text-white p-2.5 rounded-lg transition-colors flex items-center justify-center shadow-md"><Plus className="w-5 h-5" /></button>
                   </div>
                 </div>
@@ -608,21 +608,21 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
         {activeTab === 'offset' && (
           <div className="space-y-8 animate-in fade-in duration-300">
             <div className="flex items-center gap-3 mb-4 text-[#337159] border-b border-[#337159]/20 pb-4"><Factory className="w-6 h-6" /><h3 className="font-bold text-xl">إعدادات الأوفست (Offset)</h3></div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <label className="block text-sm font-bold text-slate-600 mb-2">سعر الزنكة الواحدة (ريال)</label>
-                <input type="number" value={localPrices.offsetPlatePrice || ''} onChange={(e) => handleChange('offsetPlatePrice', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg"/>
+                <input type="number" value={localPrices.offsetPlatePrice || ''} onChange={(e) => handleChange('offsetPlatePrice', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg" />
                 <p className="text-xs text-slate-400 mt-1">يتم ضرب هذا السعر في عدد الألوان (4 أو 8).</p>
               </div>
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <label className="block text-sm font-bold text-slate-600 mb-2">سعر طباعة 1000 ورق</label>
-                <input type="number" value={localPrices.offsetPrintPrice1000 || ''} onChange={(e) => handleChange('offsetPrintPrice1000', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg"/>
+                <input type="number" value={localPrices.offsetPrintPrice1000 || ''} onChange={(e) => handleChange('offsetPrintPrice1000', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg" />
                 <p className="text-xs text-slate-400 mt-1">تكلفة تشغيل الماكينة لكل ألف.</p>
               </div>
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <label className="block text-sm font-bold text-slate-600 mb-2">الحد الأدنى (زنكات + طباعة)</label>
-                <input type="number" value={localPrices.offsetMinQty || ''} onChange={(e) => handleChange('offsetMinQty', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg"/>
+                <input type="number" value={localPrices.offsetMinQty || ''} onChange={(e) => handleChange('offsetMinQty', e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg" />
                 <p className="text-xs text-slate-400 mt-1">أقل سعر يمكن احتسابه للتشغيل والزنكات معاً.</p>
               </div>
             </div>
@@ -637,7 +637,7 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                 <div className="flex-1 bg-white border border-t-0 border-slate-200 p-4 mb-4 overflow-y-auto min-h-[300px]">
                   {localPrices.offsetPaperTypes?.map((paper, idx) => (
                     <div key={idx} className={`flex items-center gap-3 bg-slate-50 p-3 mb-2 rounded-lg border border-slate-100 shadow-sm ${paper.active === false ? 'opacity-50' : ''}`}>
-                      <button 
+                      <button
                         onClick={() => handleOffsetPaperChange(idx, 'active', paper.active === false ? true : false)}
                         className={`p-1 rounded-full ${paper.active !== false ? 'text-green-500 hover:bg-green-50' : 'text-slate-400 hover:bg-slate-100'}`}
                       >
@@ -645,16 +645,16 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                       </button>
                       <div className="flex-1">
                         <label className="text-[10px] text-slate-400 block mb-1">اسم الورق</label>
-                        <input type="text" value={paper.name} onChange={(e) => handleOffsetPaperChange(idx, 'name', e.target.value)} className="w-full text-sm font-bold text-slate-700 bg-transparent border-none outline-none"/>
+                        <input type="text" value={paper.name} onChange={(e) => handleOffsetPaperChange(idx, 'name', e.target.value)} className="w-full text-sm font-bold text-slate-700 bg-transparent border-none outline-none" />
                       </div>
                       <div className="w-24">
                         <label className="text-[10px] text-slate-400 block mb-1">سعر الألف (ريال)</label>
-                        <input type="number" value={paper.price} onChange={(e) => handleOffsetPaperChange(idx, 'price', e.target.value)} className="w-full text-sm font-bold text-[#337159] bg-white border border-[#b99ecb] rounded px-2 py-1 outline-none text-center"/>
+                        <input type="number" value={paper.price} onChange={(e) => handleOffsetPaperChange(idx, 'price', e.target.value)} className="w-full text-sm font-bold text-[#337159] bg-white border border-[#b99ecb] rounded px-2 py-1 outline-none text-center" />
                       </div>
                       <button onClick={() => handleRemoveOffsetPaper(idx)} className="text-red-400 hover:text-red-600 p-2"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   ))}
-                  
+
                   {/* Add New Offset Paper */}
                   <div className="mt-4 pt-4 border-t border-slate-100">
                     <h5 className="text-xs font-bold text-slate-500 mb-2">إضافة ورق جديد</h5>
@@ -669,16 +669,16 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
 
               {/* Offset Discounts */}
               <div>
-                 <DiscountManager discounts={localPrices.offsetDiscounts} onChange={(newDiscounts) => handleDiscountChange('offsetDiscounts', newDiscounts)} unitLabel="ورق (طباعة)" />
-                 <div className="mt-6 bg-yellow-50 p-4 rounded-xl border border-yellow-100 text-sm text-yellow-800">
-                    <h5 className="font-bold mb-2">ملاحظة عن الأوفست:</h5>
-                    <ul className="list-disc list-inside space-y-1 text-xs">
-                        <li>يتم احتساب عدد الورق بقسمة الكمية المطلوبة على عدد التكرار في الورق (70×100).</li>
-                        <li>تكلفة الورق = (عدد الورق / 1000) × سعر الورق المحدد.</li>
-                        <li>تكلفة الطباعة = (عدد الورق / 1000) × سعر الطباعة، بحد أدنى للتشغيل.</li>
-                        <li>عدد الزنكات = 4 (وجه واحد) أو 8 (وجهين).</li>
-                    </ul>
-                 </div>
+                <DiscountManager discounts={localPrices.offsetDiscounts} onChange={(newDiscounts) => handleDiscountChange('offsetDiscounts', newDiscounts)} unitLabel="ورق (طباعة)" />
+                <div className="mt-6 bg-yellow-50 p-4 rounded-xl border border-yellow-100 text-sm text-yellow-800">
+                  <h5 className="font-bold mb-2">ملاحظة عن الأوفست:</h5>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>يتم احتساب عدد الورق بقسمة الكمية المطلوبة على عدد التكرار في الورق (70×100).</li>
+                    <li>تكلفة الورق = (عدد الورق / 1000) × سعر الورق المحدد.</li>
+                    <li>تكلفة الطباعة = (عدد الورق / 1000) × سعر الطباعة، بحد أدنى للتشغيل.</li>
+                    <li>عدد الزنكات = 4 (وجه واحد) أو 8 (وجهين).</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -686,35 +686,35 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
 
         {activeTab === 'users' && <UserManagement />}
         {activeTab === 'history' && <HistoryLog />}
-        
+
         {/* General Settings Tab */}
         {activeTab === 'general' && (
           <div className="animate-in fade-in duration-300 p-4">
             <div className="flex items-center gap-3 mb-6 text-slate-800 border-b border-slate-200 pb-4"><Sliders className="w-6 h-6" /><h3 className="font-bold text-xl">إعدادات عامة</h3></div>
-            
+
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-4">
               <h4 className="font-bold text-[#337159] mb-4 text-lg border-b pb-2">إعدادات الأسعار والربح</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div>
-                    <label className="block text-sm font-bold text-slate-600 mb-2">نسبة الضريبة (VAT) %</label>
-                    <input 
-                      type="number" 
-                      value={localGeneral.taxRate ?? 15} 
-                      onChange={(e) => setLocalGeneral({...localGeneral, taxRate: parseFloat(e.target.value)})} 
-                      className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg text-center font-bold text-[#337159]"
-                    />
-                    <p className="text-xs text-slate-400 mt-1">النسبة المئوية لضريبة القيمة المضافة (الافتراضي 15%)</p>
-                 </div>
-                 <div>
-                    <label className="block text-sm font-bold text-slate-600 mb-2">نسبة هامش الربح %</label>
-                    <input 
-                      type="number" 
-                      value={localGeneral.profitMargin ?? 15} 
-                      onChange={(e) => setLocalGeneral({...localGeneral, profitMargin: parseFloat(e.target.value)})} 
-                      className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg text-center font-bold text-[#337159]"
-                    />
-                    <p className="text-xs text-slate-400 mt-1">النسبة المضافة فوق التكلفة كربح (الافتراضي 15%)</p>
-                 </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-600 mb-2">نسبة الضريبة (VAT) %</label>
+                  <input
+                    type="number"
+                    value={localGeneral.taxRate ?? 15}
+                    onChange={(e) => setLocalGeneral({ ...localGeneral, taxRate: parseFloat(e.target.value) })}
+                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg text-center font-bold text-[#337159]"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">النسبة المئوية لضريبة القيمة المضافة (الافتراضي 15%)</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-600 mb-2">نسبة هامش الربح %</label>
+                  <input
+                    type="number"
+                    value={localGeneral.profitMargin ?? 15}
+                    onChange={(e) => setLocalGeneral({ ...localGeneral, profitMargin: parseFloat(e.target.value) })}
+                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg text-center font-bold text-[#337159]"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">النسبة المضافة فوق التكلفة كربح (الافتراضي 15%)</p>
+                </div>
               </div>
             </div>
 
@@ -723,7 +723,7 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                 <h4 className="font-bold text-slate-800 mb-1">تفعيل إدخال الأسعار يدوياً للموظف</h4>
                 <p className="text-sm text-slate-500">عند التفعيل، سيظهر حقل إضافي للموظف يسمح له بتعديل سعر الخامة (المتر/الورق) يدوياً.</p>
               </div>
-              <button 
+              <button
                 onClick={() => toggleGeneralSetting('allowPriceOverride')}
                 className={`p-2 rounded-full transition-colors ${localGeneral.allowPriceOverride ? 'bg-[#337159]/10 text-[#337159]' : 'bg-slate-100 text-slate-400'}`}
               >
@@ -733,35 +733,35 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
 
             {/* Visibility Controls */}
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                <h4 className="font-bold text-slate-800 border-b pb-2">التحكم في ظهور الحاسبات</h4>
-                
-                <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-slate-700 font-medium"><Scroll className="w-4 h-4" /> حاسبة الرول (Roll-to-Roll)</span>
-                    <button onClick={() => toggleGeneralSetting('showRoll')} className={`p-1 rounded-full transition-colors ${localGeneral.showRoll !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
-                        {localGeneral.showRoll !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
-                    </button>
-                </div>
+              <h4 className="font-bold text-slate-800 border-b pb-2">التحكم في ظهور الحاسبات</h4>
 
-                <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-slate-700 font-medium"><Layout className="w-4 h-4" /> حاسبة الديجيتال (Digital)</span>
-                    <button onClick={() => toggleGeneralSetting('showDigital')} className={`p-1 rounded-full transition-colors ${localGeneral.showDigital !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
-                        {localGeneral.showDigital !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
-                    </button>
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-slate-700 font-medium"><Scroll className="w-4 h-4" /> حاسبة الرول (Roll-to-Roll)</span>
+                <button onClick={() => toggleGeneralSetting('showRoll')} className={`p-1 rounded-full transition-colors ${localGeneral.showRoll !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
+                  {localGeneral.showRoll !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
+                </button>
+              </div>
 
-                <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-slate-700 font-medium"><Factory className="w-4 h-4" /> حاسبة الأوفست (Offset)</span>
-                    <button onClick={() => toggleGeneralSetting('showOffset')} className={`p-1 rounded-full transition-colors ${localGeneral.showOffset !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
-                        {localGeneral.showOffset !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
-                    </button>
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-slate-700 font-medium"><Layout className="w-4 h-4" /> حاسبة الديجيتال (Digital)</span>
+                <button onClick={() => toggleGeneralSetting('showDigital')} className={`p-1 rounded-full transition-colors ${localGeneral.showDigital !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
+                  {localGeneral.showDigital !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
+                </button>
+              </div>
 
-                <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-slate-700 font-medium"><Palette className="w-4 h-4" /> حاسبة UV DTF</span>
-                    <button onClick={() => toggleGeneralSetting('showUvDtf')} className={`p-1 rounded-full transition-colors ${localGeneral.showUvDtf !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
-                        {localGeneral.showUvDtf !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
-                    </button>
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-slate-700 font-medium"><Factory className="w-4 h-4" /> حاسبة الأوفست (Offset)</span>
+                <button onClick={() => toggleGeneralSetting('showOffset')} className={`p-1 rounded-full transition-colors ${localGeneral.showOffset !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
+                  {localGeneral.showOffset !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-slate-700 font-medium"><Palette className="w-4 h-4" /> حاسبة UV DTF</span>
+                <button onClick={() => toggleGeneralSetting('showUvDtf')} className={`p-1 rounded-full transition-colors ${localGeneral.showUvDtf !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
+                  {localGeneral.showUvDtf !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
+                </button>
+              </div>
             </div>
 
           </div>
@@ -791,10 +791,10 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
 
 // 5. الحاسبة (الموظف)
 const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) => {
-  const [activeTab, setActiveTab] = useState(''); 
+  const [activeTab, setActiveTab] = useState('');
   const [inputs, setInputs] = useState({ width: 0, height: 0, quantity: 0, rollWidth: prices.defaultRollWidth || 100, offsetFaces: '1' });
-  const [foilInputs, setFoilInputs] = useState({ width: 0, height: 0 }); 
-  
+  const [foilInputs, setFoilInputs] = useState({ width: 0, height: 0 });
+
   const [customUnitPrice, setCustomUnitPrice] = useState('');
 
   const [selectedPaperIndex, setSelectedPaperIndex] = useState(0);
@@ -802,17 +802,17 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
 
   const [selectedSheetSizeIndex, setSelectedSheetSizeIndex] = useState(0);
   const [selectedAddonsIndices, setSelectedAddonsIndices] = useState([]);
-  const [isFoilEnabled, setIsFoilEnabled] = useState(false); 
+  const [isFoilEnabled, setIsFoilEnabled] = useState(false);
   const [isSpotUvEnabled, setIsSpotUvEnabled] = useState(false);
   const [savingLog, setSavingLog] = useState(false);
 
   // Set initial active tab based on visibility settings
   useEffect(() => {
     if (!activeTab) {
-        if (generalSettings?.showRoll !== false) setActiveTab('roll');
-        else if (generalSettings?.showDigital !== false) setActiveTab('digital');
-        else if (generalSettings?.showOffset !== false) setActiveTab('offset');
-        else if (generalSettings?.showUvDtf !== false) setActiveTab('uvdtf');
+      if (generalSettings?.showRoll !== false) setActiveTab('roll');
+      else if (generalSettings?.showDigital !== false) setActiveTab('digital');
+      else if (generalSettings?.showOffset !== false) setActiveTab('offset');
+      else if (generalSettings?.showUvDtf !== false) setActiveTab('uvdtf');
     }
   }, [generalSettings, activeTab]);
 
@@ -828,13 +828,13 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
   // Adjust selected index if list changes
   useEffect(() => {
     if (activeTab === 'digital') {
-        if (selectedPaperIndex >= activePapers.length && activePapers.length > 0) {
-            setSelectedPaperIndex(0);
-        }
+      if (selectedPaperIndex >= activePapers.length && activePapers.length > 0) {
+        setSelectedPaperIndex(0);
+      }
     }
-  }, [activePapers.length, activeTab]);
+  }, [activePapers.length, activeTab, selectedPaperIndex]);
 
-  useEffect(() => { setInputs(prev => ({...prev, rollWidth: prices.defaultRollWidth || 100})); }, [prices.defaultRollWidth]);
+  useEffect(() => { setInputs(prev => ({ ...prev, rollWidth: prices.defaultRollWidth || 100 })); }, [prices.defaultRollWidth]);
   const handleInput = (e) => { const { name, value } = e.target; setInputs(prev => ({ ...prev, [name]: parseFloat(value) || 0 })); };
   const handleFoilInput = (e) => { const { name, value } = e.target; setFoilInputs(prev => ({ ...prev, [name]: parseFloat(value) || 0 })); };
   const handleFaceChange = (e) => { setInputs(prev => ({ ...prev, offsetFaces: e.target.value })); };
@@ -862,15 +862,14 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
 
   const results = useMemo(() => {
     let unitPrice = 0;
-    const isCustomPriceActive = generalSettings?.allowPriceOverride && customUnitPrice !== '' && !isNaN(parseFloat(customUnitPrice));
-    
+
     // Check if manual price override is enabled and enforce input
     if (generalSettings?.allowPriceOverride) {
-        if (!customUnitPrice || isNaN(parseFloat(customUnitPrice))) {
-            return { missingPrice: true }; // Changed from returning empty object
-        }
+      if (!customUnitPrice || isNaN(parseFloat(customUnitPrice))) {
+        return { missingPrice: true }; // Changed from returning empty object
+      }
     }
-    
+
     // Configurable Tax & Margin
     const taxRate = (generalSettings?.taxRate ?? 15) / 100;
     const marginRate = 1 + ((generalSettings?.profitMargin ?? 15) / 100);
@@ -880,35 +879,35 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
 
     if (activeTab === 'roll') {
       const stickerW = inputs.width; const stickerH = inputs.height; const qty = inputs.quantity; const rollW = inputs.rollWidth;
-      
+
       unitPrice = isManualMode ? manualPrice : (prices.rollUnitPrice || 0);
 
-      const stickersPerRow = Math.floor(rollW / (stickerW + 0.2)); const rowsNeeded = stickersPerRow > 0 ? Math.ceil(qty / stickersPerRow) : 0; const baseLengthMeters = (rowsNeeded * (stickerH + 0.2)) / 100; const marginCount = Math.floor(baseLengthMeters / 0.5); const finalLength = baseLengthMeters + (marginCount * 0.05); const area = finalLength * (rollW / 100); 
-      
-      let finalPrice = area * unitPrice * marginRate; 
-      
+      const stickersPerRow = Math.floor(rollW / (stickerW + 0.2)); const rowsNeeded = stickersPerRow > 0 ? Math.ceil(qty / stickersPerRow) : 0; const baseLengthMeters = (rowsNeeded * (stickerH + 0.2)) / 100; const marginCount = Math.floor(baseLengthMeters / 0.5); const finalLength = baseLengthMeters + (marginCount * 0.05); const area = finalLength * (rollW / 100);
+
+      let finalPrice = area * unitPrice * marginRate;
+
       const discountPercent = getDiscountPercent(area, prices.rollDiscounts);
       const discountAmount = finalPrice * (discountPercent / 100);
       const priceAfterDiscount = finalPrice - discountAmount;
       return { stickersPerRow, rowsNeeded, baseLengthMeters, marginCount, finalLength, area, finalPrice, discountPercent, discountAmount, priceAfterDiscount, details: `رول: ${stickerW}x${stickerH}cm (كمية: ${qty})` };
-    } 
+    }
     else if (activeTab === 'digital') {
       const stickerW = inputs.width; const stickerH = inputs.height; const qty = inputs.quantity;
       const sizeObj = prices.digitalSheetSizes?.[selectedSheetSizeIndex] || { width: 33, height: 48 };
       const sheetW = sizeObj.width; const sheetH = sizeObj.height;
-      
+
       let systemSheetPrice = 0;
       let paperName = 'ورق';
-      
-      if (activePapers.length > 0 && activePapers[selectedPaperIndex]) { 
-        systemSheetPrice = activePapers[selectedPaperIndex].price; 
+
+      if (activePapers.length > 0 && activePapers[selectedPaperIndex]) {
+        systemSheetPrice = activePapers[selectedPaperIndex].price;
         paperName = activePapers[selectedPaperIndex].name;
-      } else { 
-        systemSheetPrice = prices.digitalSheetPrice || 0; 
+      } else {
+        systemSheetPrice = prices.digitalSheetPrice || 0;
       }
 
       unitPrice = isManualMode ? manualPrice : systemSheetPrice;
-      
+
       let addonsCostPerSheet = 0;
       if (prices.digitalAddons) {
         selectedAddonsIndices.forEach(idx => {
@@ -917,226 +916,226 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
           }
         });
       }
-      
+
       // -- UPDATED LOGIC: Calculate best fit (rotate if necessary) --
       const margin = 0.2;
       // Option 1: No rotation (Width on Width, Height on Height)
       const count1 = Math.floor(sheetW / (stickerW + margin)) * Math.floor(sheetH / (stickerH + margin));
       // Option 2: Rotated 90 degrees (Width on Height, Height on Width)
       const count2 = Math.floor(sheetW / (stickerH + margin)) * Math.floor(sheetH / (stickerW + margin));
-      
+
       const perSheet = Math.max(count1, count2);
       const isRotatedBest = count2 > count1;
 
-      const sheetsNeeded = perSheet > 0 ? Math.ceil(qty / perSheet) : 0; 
-      
+      const sheetsNeeded = perSheet > 0 ? Math.ceil(qty / perSheet) : 0;
+
       // --- Waste Logic (الهالك) ---
       let wasteSheets = 0;
       if (sheetsNeeded > 0) {
-          if (sheetsNeeded <= 100) {
-              wasteSheets = 5;
-          } else if (sheetsNeeded <= 250) {
-              wasteSheets = 10;
-          } else if (sheetsNeeded <= 500) {
-              wasteSheets = 20;
-          } else {
-              wasteSheets = 30; // 501 to 1000+
-          }
+        if (sheetsNeeded <= 100) {
+          wasteSheets = 5;
+        } else if (sheetsNeeded <= 250) {
+          wasteSheets = 10;
+        } else if (sheetsNeeded <= 500) {
+          wasteSheets = 20;
+        } else {
+          wasteSheets = 30; // 501 to 1000+
+        }
       }
-      
+
       const totalSheetsWithWaste = sheetsNeeded + wasteSheets;
 
       // Check if design is larger than sheet
       let error = null;
       if (stickerW > 0 && stickerH > 0 && perSheet === 0) {
-          error = `عفواً، مقاس التصميم (${stickerW}×${stickerH}) أكبر من مقاس الورق المختار (${sheetW}×${sheetH}) مع الهوامش. يرجى اختيار ورق أكبر أو تقليل المقاس.`;
+        error = `عفواً، مقاس التصميم (${stickerW}×${stickerH}) أكبر من مقاس الورق المختار (${sheetW}×${sheetH}) مع الهوامش. يرجى اختيار ورق أكبر أو تقليل المقاس.`;
       }
-      
+
       // Calculate Price based on Total Sheets (Net + Waste)
       const basePrice = totalSheetsWithWaste * unitPrice;
       const totalAddonsPrice = totalSheetsWithWaste * addonsCostPerSheet;
-      
+
       // Foil Calculations
       let foilCost = 0;
       let moldPrice = 0;
       let stampingCost = 0;
 
       if (isFoilEnabled) {
-          const fW = foilInputs.width > 0 ? foilInputs.width : stickerW;
-          const fH = foilInputs.height > 0 ? foilInputs.height : stickerH;
-          const foilArea = fW * fH;
-          
-          // 1. حساب سعر القالب (Mold)
-          moldPrice = foilArea * (prices.foilMoldPricePerCm2 || 1.15);
-          if (moldPrice < (prices.foilMinMoldPrice || 150)) {
-              moldPrice = prices.foilMinMoldPrice || 150;
-          }
+        const fW = foilInputs.width > 0 ? foilInputs.width : stickerW;
+        const fH = foilInputs.height > 0 ? foilInputs.height : stickerH;
+        const foilArea = fW * fH;
 
-          // 2. حساب سعر التبصيم (Stamping)
-          // القاعدة: الحد الأدنى 200 ريال، أو السعر المحسوب أيهما أعلى
-          let rawStampingCost = qty * (prices.foilStampingUnitPrice || 0.40);
-          
-          if (rawStampingCost < 200) {
-              stampingCost = 200; // تثبيت السعر على 200 إذا كان أقل
-          } else {
-              stampingCost = rawStampingCost; // اعتماد السعر الأعلى
-          }
-          
-          foilCost = moldPrice + stampingCost;
+        // 1. حساب سعر القالب (Mold)
+        moldPrice = foilArea * (prices.foilMoldPricePerCm2 || 1.15);
+        if (moldPrice < (prices.foilMinMoldPrice || 150)) {
+          moldPrice = prices.foilMinMoldPrice || 150;
+        }
+
+        // 2. حساب سعر التبصيم (Stamping)
+        // القاعدة: الحد الأدنى 200 ريال، أو السعر المحسوب أيهما أعلى
+        let rawStampingCost = qty * (prices.foilStampingUnitPrice || 0.40);
+
+        if (rawStampingCost < 200) {
+          stampingCost = 200; // تثبيت السعر على 200 إذا كان أقل
+        } else {
+          stampingCost = rawStampingCost; // اعتماد السعر الأعلى
+        }
+
+        foilCost = moldPrice + stampingCost;
       }
-      
+
       // Spot UV Calculation
       let spotUvCost = 0;
       if (isSpotUvEnabled && sheetsNeeded > 0) {
-          if (sheetsNeeded <= 30) {
-              spotUvCost = 450;
-          } else if (sheetsNeeded <= 50) {
-              spotUvCost = 800;
-          } else {
-              spotUvCost = 1000;
-          }
+        if (sheetsNeeded <= 30) {
+          spotUvCost = 450;
+        } else if (sheetsNeeded <= 50) {
+          spotUvCost = 800;
+        } else {
+          spotUvCost = 1000;
+        }
       }
 
       const pricePreTax = basePrice + totalAddonsPrice + foilCost + spotUvCost;
-      const tax = pricePreTax * taxRate; 
+      const tax = pricePreTax * taxRate;
       const finalPrice = pricePreTax + tax;
 
       const discountPercent = getDiscountPercent(sheetsNeeded, prices.digitalDiscounts);
       const discountAmount = finalPrice * (discountPercent / 100);
       const priceAfterDiscount = finalPrice - discountAmount;
-      
+
       // --- Calculate Savings Logic ---
       let savingsMessage = null;
       if (count1 !== count2 && perSheet > 0) {
-          const worstCount = Math.min(count1, count2);
-          if (worstCount > 0) {
-              const worstSheetsNeeded = Math.ceil(qty / worstCount);
-              
-              // Calc worst case waste
-              let worstWaste = 0;
-              if (worstSheetsNeeded <= 100) worstWaste = 5;
-              else if (worstSheetsNeeded <= 250) worstWaste = 10;
-              else if (worstSheetsNeeded <= 500) worstWaste = 20;
-              else worstWaste = 30;
+        const worstCount = Math.min(count1, count2);
+        if (worstCount > 0) {
+          const worstSheetsNeeded = Math.ceil(qty / worstCount);
 
-              const worstTotalSheets = worstSheetsNeeded + worstWaste;
-              const worstBasePrice = worstTotalSheets * unitPrice;
-              const worstAddons = worstTotalSheets * addonsCostPerSheet;
-              
-              const worstPricePreTax = worstBasePrice + worstAddons + foilCost + spotUvCost;
-              const worstTax = worstPricePreTax * taxRate;
-              const worstFinalPrice = worstPricePreTax + worstTax;
-              
-              const worstDiscountPercent = getDiscountPercent(worstSheetsNeeded, prices.digitalDiscounts);
-              const worstDiscountAmount = worstFinalPrice * (worstDiscountPercent / 100);
-              const worstPriceAfterDiscount = worstFinalPrice - worstDiscountAmount;
+          // Calc worst case waste
+          let worstWaste = 0;
+          if (worstSheetsNeeded <= 100) worstWaste = 5;
+          else if (worstSheetsNeeded <= 250) worstWaste = 10;
+          else if (worstSheetsNeeded <= 500) worstWaste = 20;
+          else worstWaste = 30;
 
-              const diff = worstPriceAfterDiscount - priceAfterDiscount;
-              
-              if (diff > 0) {
-                  const method = isRotatedBest ? "التدوير (تدوير التصميم)" : "الوضع القياسي";
-                  savingsMessage = `تم اختيار ${method} تلقائياً لأنه وفر ${Math.round(diff)} ريال مقارنة بالوضع الآخر.`;
-              }
+          const worstTotalSheets = worstSheetsNeeded + worstWaste;
+          const worstBasePrice = worstTotalSheets * unitPrice;
+          const worstAddons = worstTotalSheets * addonsCostPerSheet;
+
+          const worstPricePreTax = worstBasePrice + worstAddons + foilCost + spotUvCost;
+          const worstTax = worstPricePreTax * taxRate;
+          const worstFinalPrice = worstPricePreTax + worstTax;
+
+          const worstDiscountPercent = getDiscountPercent(worstSheetsNeeded, prices.digitalDiscounts);
+          const worstDiscountAmount = worstFinalPrice * (worstDiscountPercent / 100);
+          const worstPriceAfterDiscount = worstFinalPrice - worstDiscountAmount;
+
+          const diff = worstPriceAfterDiscount - priceAfterDiscount;
+
+          if (diff > 0) {
+            const method = isRotatedBest ? "التدوير (تدوير التصميم)" : "الوضع القياسي";
+            savingsMessage = `تم اختيار ${method} تلقائياً لأنه وفر ${Math.round(diff)} ريال مقارنة بالوضع الآخر.`;
           }
+        }
       }
 
       let details = `ديجيتال: ${paperName} (${qty} قطعة)`;
       if (isFoilEnabled) details += ` + بصمة`;
       if (isSpotUvEnabled) details += ` + سبوت يو في`;
 
-      return { 
-          perSheet, sheetsNeeded, wasteSheets, totalSheetsWithWaste, // Added new values
-          pricePreTax, tax, finalPrice, sheetPriceUsed: unitPrice, addonsCostPerSheet, totalAddonsPrice, 
-          dims: `${sheetW}×${sheetH}`, discountPercent, discountAmount, priceAfterDiscount, details,
-          foilCost, moldPrice, stampingCost, savingsMessage, spotUvCost, error
+      return {
+        perSheet, sheetsNeeded, wasteSheets, totalSheetsWithWaste, // Added new values
+        pricePreTax, tax, finalPrice, sheetPriceUsed: unitPrice, addonsCostPerSheet, totalAddonsPrice,
+        dims: `${sheetW}×${sheetH}`, discountPercent, discountAmount, priceAfterDiscount, details,
+        foilCost, moldPrice, stampingCost, savingsMessage, spotUvCost, error
       };
     }
     else if (activeTab === 'offset') {
-        const itemW = inputs.width; const itemH = inputs.height; const qty = inputs.quantity;
-        const faces = inputs.offsetFaces === '2' ? 2 : 1;
-        // Assume 70x100 sheet
-        const sheetW = 100; const sheetH = 70;
-        
-        // Simple UPS calculation
-        const ups = Math.floor(sheetW / (itemW + 0.4)) * Math.floor(sheetH / (itemH + 0.4));
-        const sheetsNeeded = ups > 0 ? Math.ceil(qty / ups) : 0;
-        const totalSheetsIncludingWaste = Math.ceil(sheetsNeeded * 1.05); // 5% waste
+      const itemW = inputs.width; const itemH = inputs.height; const qty = inputs.quantity;
+      const faces = inputs.offsetFaces === '2' ? 2 : 1;
+      // Assume 70x100 sheet
+      const sheetW = 100; const sheetH = 70;
 
-        // Costs
-        const numPlates = faces === 2 ? 8 : 4; // 4 colors CMYK assumed
-        const plateCost = numPlates * (prices.offsetPlatePrice || 50);
-        
-        // Print Cost
-        const printRunCost = (totalSheetsIncludingWaste / 1000) * (prices.offsetPrintPrice1000 || 80);
-        const actualPrintCost = Math.max(printRunCost, (prices.offsetMinQty || 0) / 2); // Split min qty logic? Let's just assume Print Price applies directly but check logic. 
-        // Actually usually min qty applies to the total process, but let's just stick to unit prices for now.
-        
-        // Paper Cost
-        let paperPricePer1000 = 0;
-        let paperName = 'ورق أوفست';
-        if (activeOffsetPapers.length > 0 && activeOffsetPapers[selectedOffsetPaperIndex]) {
-            paperPricePer1000 = activeOffsetPapers[selectedOffsetPaperIndex].price;
-            paperName = activeOffsetPapers[selectedOffsetPaperIndex].name;
-        }
-        
-        // Override
-        if (isManualMode) {
-            paperPricePer1000 = manualPrice;
-        }
+      // Simple UPS calculation
+      const ups = Math.floor(sheetW / (itemW + 0.4)) * Math.floor(sheetH / (itemH + 0.4));
+      const sheetsNeeded = ups > 0 ? Math.ceil(qty / ups) : 0;
+      const totalSheetsIncludingWaste = Math.ceil(sheetsNeeded * 1.05); // 5% waste
 
-        const paperCost = (totalSheetsIncludingWaste / 1000) * paperPricePer1000;
+      // Costs
+      const numPlates = faces === 2 ? 8 : 4; // 4 colors CMYK assumed
+      const plateCost = numPlates * (prices.offsetPlatePrice || 50);
 
-        const subTotal = plateCost + actualPrintCost + paperCost;
-        const total = subTotal * marginRate; 
-        
-        // Removed double margin: const finalPrice = total * 1.20; 
-        const finalPrice = total; 
+      // Print Cost
+      const printRunCost = (totalSheetsIncludingWaste / 1000) * (prices.offsetPrintPrice1000 || 80);
+      const actualPrintCost = Math.max(printRunCost, (prices.offsetMinQty || 0) / 2); // Split min qty logic? Let's just assume Print Price applies directly but check logic. 
+      // Actually usually min qty applies to the total process, but let's just stick to unit prices for now.
 
-        const discountPercent = getDiscountPercent(sheetsNeeded, prices.offsetDiscounts);
-        const discountAmount = finalPrice * (discountPercent / 100);
-        const priceAfterDiscount = finalPrice - discountAmount;
+      // Paper Cost
+      let paperPricePer1000 = 0;
+      let paperName = 'ورق أوفست';
+      if (activeOffsetPapers.length > 0 && activeOffsetPapers[selectedOffsetPaperIndex]) {
+        paperPricePer1000 = activeOffsetPapers[selectedOffsetPaperIndex].price;
+        paperName = activeOffsetPapers[selectedOffsetPaperIndex].name;
+      }
 
-        const details = `أوفست: ${paperName} (${faces === 2 ? 'وجهين' : 'وجه واحد'}) - ${qty} قطعة`;
+      // Override
+      if (isManualMode) {
+        paperPricePer1000 = manualPrice;
+      }
 
-        return {
-            ups, sheetsNeeded, totalSheetsIncludingWaste, plateCost, paperCost, actualPrintCost, finalPrice, discountPercent, discountAmount, priceAfterDiscount, details, numPlates, paperPriceUsed: paperPricePer1000
-        };
+      const paperCost = (totalSheetsIncludingWaste / 1000) * paperPricePer1000;
+
+      const subTotal = plateCost + actualPrintCost + paperCost;
+      const total = subTotal * marginRate;
+
+      // Removed double margin: const finalPrice = total * 1.20; 
+      const finalPrice = total;
+
+      const discountPercent = getDiscountPercent(sheetsNeeded, prices.offsetDiscounts);
+      const discountAmount = finalPrice * (discountPercent / 100);
+      const priceAfterDiscount = finalPrice - discountAmount;
+
+      const details = `أوفست: ${paperName} (${faces === 2 ? 'وجهين' : 'وجه واحد'}) - ${qty} قطعة`;
+
+      return {
+        ups, sheetsNeeded, totalSheetsIncludingWaste, plateCost, paperCost, actualPrintCost, finalPrice, discountPercent, discountAmount, priceAfterDiscount, details, numPlates, paperPriceUsed: paperPricePer1000
+      };
     }
-     else if (activeTab === 'uvdtf') {
+    else if (activeTab === 'uvdtf') {
       const L = inputs.width;  // الطول (B2 في إكسل)
       const W = inputs.height; // العرض (C2 في إكسل)
       const qty = inputs.quantity; // الكمية (D2 في إكسل)
       const rollW = 55; // المسطح الثابت
-      
+
       // INT(55 / (B2 + 0.5)) -> عدد الملصقات في عرض المسطح
       const stickersPerRow = Math.floor(rollW / (L + 0.5));
-      
+
       if (stickersPerRow <= 0 && L > 0) return { error: "الاستيكر أعرض من المسطح (55 سم)" };
-      
+
       // CEILING(D2 / stickersPerRow, 1) -> عدد الصفوف
       const totalRows = stickersPerRow > 0 ? Math.ceil(qty / stickersPerRow) : 0;
-      
+
       // ROUND(totalRows * (W + 0.5) / 100, 2) -> الأمتار المستهلكة (E2 في إكسل)
       const metersConsumed = parseFloat(((totalRows * (W + 0.5)) / 100).toFixed(2));
-      
+
       // تحديد سعر المتر التلقائي (F2) بناءً على شرائح الصورة
       let tierPrice = 150;
       if (metersConsumed >= 4 && metersConsumed <= 10) tierPrice = 120;
       else if (metersConsumed > 10) tierPrice = 95;
-      
+
       unitPrice = isManualMode ? manualPrice : tierPrice;
 
       // السعر شامل الضريبة = E2 * F2 * 1.15
       const finalPrice = metersConsumed * unitPrice * 1.15;
-      
-      return { 
-        stickersPerRow, 
-        totalRows, 
-        metersConsumed, 
+
+      return {
+        stickersPerRow,
+        totalRows,
+        metersConsumed,
         unitPriceUsed: unitPrice,
-        finalPrice, 
-        priceAfterDiscount: finalPrice, 
-        details: `UV DTF: ${L}x${W}cm (كمية: ${qty})` 
+        finalPrice,
+        priceAfterDiscount: finalPrice,
+        details: `UV DTF: ${L}x${W}cm (كمية: ${qty})`
       };
     }
     return {};
@@ -1163,39 +1162,23 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
     setSavingLog(false);
   };
 
-  const getSystemPriceDisplay = () => {
-    if (activeTab === 'roll') return prices.rollUnitPrice;
-    if (activeTab === 'uvdtf') return prices.uvDtfPrice;
-    if (activeTab === 'digital') {
-        if (activePapers.length > 0 && activePapers[selectedPaperIndex]) {
-            return activePapers[selectedPaperIndex].price;
-        }
-        return prices.digitalSheetPrice || 'السعر الافتراضي';
-    }
-    if (activeTab === 'offset') {
-         if (activeOffsetPapers.length > 0 && activeOffsetPapers[selectedOffsetPaperIndex]) {
-            return activeOffsetPapers[selectedOffsetPaperIndex].price;
-        }
-        return 'سعر الورق لكل 1000';
-    }
-    return 0;
-  };
+  // Removed unused getSystemPriceDisplay function
 
   if (!activeTab && (generalSettings?.showRoll !== false || generalSettings?.showDigital !== false || generalSettings?.showOffset !== false || generalSettings?.showUvDtf !== false)) {
     return <div className="p-10 text-center text-slate-500">جاري تحميل الحاسبة...</div>;
   }
-  
-  if (!activeTab) return ( <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50"><Ban className="w-16 h-16 text-slate-300 mb-4" /><h2 className="text-xl font-bold text-slate-600">عذراً، جميع الحاسبات معطلة حالياً</h2><p className="text-sm text-slate-400 mt-2">يرجى التواصل مع المسؤول لتفعيل الخدمات.</p><button onClick={onAdminLogin} className="mt-8 text-slate-500 hover:text-[#fa5732] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 hover:border-[#fa5732] transition-colors"><Lock className="w-4 h-4" /> لوحة المسؤول</button></div>);
+
+  if (!activeTab) return (<div className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50"><Ban className="w-16 h-16 text-slate-300 mb-4" /><h2 className="text-xl font-bold text-slate-600">عذراً، جميع الحاسبات معطلة حالياً</h2><p className="text-sm text-slate-400 mt-2">يرجى التواصل مع المسؤول لتفعيل الخدمات.</p><button onClick={onAdminLogin} className="mt-8 text-slate-500 hover:text-[#fa5732] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 hover:border-[#fa5732] transition-colors"><Lock className="w-4 h-4" /> لوحة المسؤول</button></div>);
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8" dir="rtl">
       <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-xl shadow-sm border-t-4 border-[#337159]">
         <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-slate-50 rounded-lg p-1 border border-slate-100"><img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" /></div>
-            <div>
-                <h2 className="text-xl font-bold text-[#337159]">حاسبة التسعير</h2>
-                <p className="text-sm text-slate-500">مرحباً بك في النظام</p>
-            </div>
+          <div className="w-12 h-12 bg-slate-50 rounded-lg p-1 border border-slate-100"><img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" /></div>
+          <div>
+            <h2 className="text-xl font-bold text-[#337159]">حاسبة التسعير</h2>
+            <p className="text-sm text-slate-500">مرحباً بك في النظام</p>
+          </div>
         </div>
         <button onClick={onAdminLogin} className="text-slate-500 hover:text-[#fa5732] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 hover:border-[#fa5732] transition-colors"><Lock className="w-4 h-4" /> لوحة المسؤول</button>
       </div>
@@ -1218,24 +1201,24 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="bg-slate-50 border-b border-slate-100 p-4 flex justify-between items-center"><h3 className="font-bold text-slate-700 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#337159]"></span> المدخلات (بيانات العميل)</h3></div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-              
+
               {/* --- Custom Unit Price Override Input --- */}
               {generalSettings?.allowPriceOverride && (
                 <div className="md:col-span-3 mb-4 bg-orange-50 p-4 rounded-lg border border-orange-200">
-                    <label className="block text-sm font-bold text-orange-800 mb-2">
-                      {activeTab === 'roll' ? 'سعر المتر المربع (إجباري)' : 
-                       activeTab === 'digital' ? 'سعر الورق (إجباري)' : 
-                       activeTab === 'offset' ? 'سعر الألف ورق (إجباري)' :
-                       'سعر المتر الطولي (إجباري)'} <span className="text-red-500">*</span>
-                    </label>
-                    <input 
-                      type="number" 
-                      value={customUnitPrice} 
-                      onChange={(e) => setCustomUnitPrice(e.target.value)}
-                      className="w-full p-3 bg-white border-2 border-orange-300 rounded-lg text-center font-bold text-xl text-orange-900 outline-none focus:ring-2 focus:ring-[#fa5732] placeholder-orange-200"
-                      placeholder="أدخل السعر هنا"
-                      required
-                    />
+                  <label className="block text-sm font-bold text-orange-800 mb-2">
+                    {activeTab === 'roll' ? 'سعر المتر المربع (إجباري)' :
+                      activeTab === 'digital' ? 'سعر الورق (إجباري)' :
+                        activeTab === 'offset' ? 'سعر الألف ورق (إجباري)' :
+                          'سعر المتر الطولي (إجباري)'} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={customUnitPrice}
+                    onChange={(e) => setCustomUnitPrice(e.target.value)}
+                    className="w-full p-3 bg-white border-2 border-orange-300 rounded-lg text-center font-bold text-xl text-orange-900 outline-none focus:ring-2 focus:ring-[#fa5732] placeholder-orange-200"
+                    placeholder="أدخل السعر هنا"
+                    required
+                  />
                 </div>
               )}
 
@@ -1259,43 +1242,43 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                   <div className="md:col-span-1">
                     <label className="block text-sm font-bold text-slate-600 mb-2">مقاس الورق</label>
                     <select value={selectedSheetSizeIndex} onChange={(e) => setSelectedSheetSizeIndex(Number(e.target.value))} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none font-bold text-lg text-slate-700">
-                      {prices.digitalSheetSizes && prices.digitalSheetSizes.length > 0 ? ( prices.digitalSheetSizes.map((size, idx) => (<option key={idx} value={idx}>{size.name}</option>)) ) : (<option value={0}>33×48</option>)}
+                      {prices.digitalSheetSizes && prices.digitalSheetSizes.length > 0 ? (prices.digitalSheetSizes.map((size, idx) => (<option key={idx} value={idx}>{size.name}</option>))) : (<option value={0}>33×48</option>)}
                     </select>
                   </div>
 
                   <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 my-2">
                     <div className={`p-4 rounded-xl border transition-all ${isFoilEnabled ? 'bg-[#b99ecb]/10 border-[#b99ecb]' : 'bg-slate-50 border-slate-200'}`}>
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2 text-slate-700 font-bold">
-                                <Stamp className="w-5 h-5" />
-                                <span>بصمة (Foil)</span>
-                            </div>
-                            <button onClick={() => setIsFoilEnabled(!isFoilEnabled)} className={`${isFoilEnabled ? 'text-[#fa5732]' : 'text-slate-300'}`}>
-                                {isFoilEnabled ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
-                            </button>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 text-slate-700 font-bold">
+                          <Stamp className="w-5 h-5" />
+                          <span>بصمة (Foil)</span>
                         </div>
-                        {isFoilEnabled && (
-                            <div className="grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                                <div>
-                                    <label className="text-[10px] text-slate-500">عرض البصمة (سم)</label>
-                                    <input type="number" name="width" value={foilInputs.width || ''} onChange={handleFoilInput} className="w-full p-2 text-sm border rounded text-center outline-none focus:border-[#fa5732]" placeholder="0" />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] text-slate-500">ارتفاع البصمة (سم)</label>
-                                    <input type="number" name="height" value={foilInputs.height || ''} onChange={handleFoilInput} className="w-full p-2 text-sm border rounded text-center outline-none focus:border-[#fa5732]" placeholder="0" />
-                                </div>
-                            </div>
-                        )}
+                        <button onClick={() => setIsFoilEnabled(!isFoilEnabled)} className={`${isFoilEnabled ? 'text-[#fa5732]' : 'text-slate-300'}`}>
+                          {isFoilEnabled ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
+                        </button>
+                      </div>
+                      {isFoilEnabled && (
+                        <div className="grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                          <div>
+                            <label className="text-[10px] text-slate-500">عرض البصمة (سم)</label>
+                            <input type="number" name="width" value={foilInputs.width || ''} onChange={handleFoilInput} className="w-full p-2 text-sm border rounded text-center outline-none focus:border-[#fa5732]" placeholder="0" />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-slate-500">ارتفاع البصمة (سم)</label>
+                            <input type="number" name="height" value={foilInputs.height || ''} onChange={handleFoilInput} className="w-full p-2 text-sm border rounded text-center outline-none focus:border-[#fa5732]" placeholder="0" />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className={`p-4 rounded-xl border flex items-center justify-between transition-all ${isSpotUvEnabled ? 'bg-[#b99ecb]/10 border-[#b99ecb]' : 'bg-slate-50 border-slate-200'}`}>
-                        <div className="flex items-center gap-2 text-slate-700 font-bold">
-                            <Sparkles className="w-5 h-5" />
-                            <span>سبوت يو في (Spot UV)</span>
-                        </div>
-                        <button onClick={() => setIsSpotUvEnabled(!isSpotUvEnabled)} className={`${isSpotUvEnabled ? 'text-[#fa5732]' : 'text-slate-300'}`}>
-                            {isSpotUvEnabled ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
-                        </button>
+                      <div className="flex items-center gap-2 text-slate-700 font-bold">
+                        <Sparkles className="w-5 h-5" />
+                        <span>سبوت يو في (Spot UV)</span>
+                      </div>
+                      <button onClick={() => setIsSpotUvEnabled(!isSpotUvEnabled)} className={`${isSpotUvEnabled ? 'text-[#fa5732]' : 'text-slate-300'}`}>
+                        {isSpotUvEnabled ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
+                      </button>
                     </div>
                   </div>
 
@@ -1305,12 +1288,12 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                         <Layers className="w-4 h-4" /> الإضافات (سلوفان، داي كت، إلخ)
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {prices.digitalAddons.map((addon, idx) => (
-                            <label key={idx} className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${selectedAddonsIndices.includes(idx) ? 'bg-amber-200 border-amber-400 shadow-sm' : 'bg-white border-amber-100 hover:bg-amber-100'}`}>
-                              <input type="checkbox" checked={selectedAddonsIndices.includes(idx)} onChange={() => toggleAddon(idx)} className="w-4 h-4 accent-amber-600" />
-                              <div className="flex flex-col"><span className="text-sm font-bold text-slate-700">{addon.name}</span><span className="text-[10px] text-slate-500">{addon.price} ريال/شيت</span></div>
-                            </label>
-                          ))}
+                        {prices.digitalAddons.map((addon, idx) => (
+                          <label key={idx} className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${selectedAddonsIndices.includes(idx) ? 'bg-amber-200 border-amber-400 shadow-sm' : 'bg-white border-amber-100 hover:bg-amber-100'}`}>
+                            <input type="checkbox" checked={selectedAddonsIndices.includes(idx)} onChange={() => toggleAddon(idx)} className="w-4 h-4 accent-amber-600" />
+                            <div className="flex flex-col"><span className="text-sm font-bold text-slate-700">{addon.name}</span><span className="text-[10px] text-slate-500">{addon.price} ريال/شيت</span></div>
+                          </label>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1319,7 +1302,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
 
               {activeTab === 'offset' && (
                 <>
-                   <div className="md:col-span-2">
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-bold text-slate-600 mb-2">نوع الورق (سعر الألف)</label>
                     <select value={selectedOffsetPaperIndex} onChange={(e) => setSelectedOffsetPaperIndex(Number(e.target.value))} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none font-bold text-lg text-slate-700">
                       {activeOffsetPapers.length > 0 ? (
@@ -1341,16 +1324,16 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                 </>
               )}
 
-              <div><label className="block text-sm font-bold text-slate-600 mb-2">العرض (سم)</label><input type="number" name="width" value={inputs.width || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0"/></div>
-              <div><label className="block text-sm font-bold text-slate-600 mb-2">الارتفاع (سم)</label><input type="number" name="height" value={inputs.height || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0"/></div>
-              <div><label className="block text-sm font-bold text-slate-600 mb-2">العدد المطلوب</label><input type="number" name="quantity" value={inputs.quantity || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0"/></div>
-              {activeTab === 'roll' && (<div><label className="block text-sm font-bold text-slate-600 mb-2">عرض الرول (سم)</label><input type="number" name="rollWidth" value={inputs.rollWidth || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg"/></div>)}
+              <div><label className="block text-sm font-bold text-slate-600 mb-2">العرض (سم)</label><input type="number" name="width" value={inputs.width || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0" /></div>
+              <div><label className="block text-sm font-bold text-slate-600 mb-2">الارتفاع (سم)</label><input type="number" name="height" value={inputs.height || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0" /></div>
+              <div><label className="block text-sm font-bold text-slate-600 mb-2">العدد المطلوب</label><input type="number" name="quantity" value={inputs.quantity || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" placeholder="0" /></div>
+              {activeTab === 'roll' && (<div><label className="block text-sm font-bold text-slate-600 mb-2">عرض الرول (سم)</label><input type="number" name="rollWidth" value={inputs.rollWidth || ''} onChange={handleInput} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none text-center font-bold text-lg" /></div>)}
 
               {/* Error Message Moved Here */}
               {results.error && (
                 <div className="md:col-span-3 bg-red-50 border border-red-200 text-red-800 p-3 rounded-lg text-xs font-bold flex items-center gap-2 mt-2 animate-in fade-in slide-in-from-top-2">
-                    <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                    {results.error}
+                  <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                  {results.error}
                 </div>
               )}
             </div>
@@ -1358,16 +1341,16 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="bg-slate-50 border-b border-slate-100 p-4"><h3 className="font-bold text-slate-700 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#fa5732]"></span> المخرجات (التكلفة)</h3></div>
             <div className="p-6">
-              
+
               {/* Alert for Missing Price */}
               {results.missingPrice ? (
-                 <div className="flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in duration-300">
-                    <div className="bg-orange-100 p-4 rounded-full mb-3">
-                        <AlertTriangle className="w-8 h-8 text-orange-600" />
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-700 mb-1">يرجى إدخال السعر أولاً</h3>
-                    <p className="text-slate-500 text-sm">نظام التسعير اليدوي مفعل. لا يمكن حساب التكلفة بدون إدخال سعر الوحدة.</p>
-                 </div>
+                <div className="flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in duration-300">
+                  <div className="bg-orange-100 p-4 rounded-full mb-3">
+                    <AlertTriangle className="w-8 h-8 text-orange-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-700 mb-1">يرجى إدخال السعر أولاً</h3>
+                  <p className="text-slate-500 text-sm">نظام التسعير اليدوي مفعل. لا يمكن حساب التكلفة بدون إدخال سعر الوحدة.</p>
+                </div>
               ) : (
                 <>
                   {activeTab === 'roll' && (
@@ -1389,27 +1372,27 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                       <ResultBox label="أبعاد الورق" value={results.dims} />
                       <ResultBox label="سعر الورق (للورقة)" value={results.sheetPriceUsed} />
                       {results.addonsCostPerSheet > 0 && <ResultBox label="سعر الإضافات (للورق)" value={results.addonsCostPerSheet} />}
-                      
+
                       {isFoilEnabled && (
                         <div className="col-span-2 md:col-span-3 bg-[#b99ecb]/10 p-3 rounded-lg border border-[#b99ecb] grid grid-cols-2 gap-2 mt-2">
-                            <div className="col-span-2 font-bold text-[#337159] text-xs mb-1">تفاصيل البصمة ({foilInputs.width || inputs.width}x{foilInputs.height || inputs.height}):</div>
-                            <div className="text-xs flex justify-between"><span>سعر القالب:</span> <span className="font-bold">{results.moldPrice?.toFixed(1)} ريال</span></div>
-                            <div className="text-xs flex justify-between"><span>تكلفة التبصيم:</span> <span className="font-bold">{results.stampingCost?.toFixed(1)} ريال</span></div>
-                            <div className="text-xs flex justify-between border-t border-[#b99ecb] pt-1 col-span-2 text-[#337159]"><span>إجمالي البصمة:</span> <span className="font-bold">{results.foilCost?.toFixed(1)} ريال</span></div>
+                          <div className="col-span-2 font-bold text-[#337159] text-xs mb-1">تفاصيل البصمة ({foilInputs.width || inputs.width}x{foilInputs.height || inputs.height}):</div>
+                          <div className="text-xs flex justify-between"><span>سعر القالب:</span> <span className="font-bold">{results.moldPrice?.toFixed(1)} ريال</span></div>
+                          <div className="text-xs flex justify-between"><span>تكلفة التبصيم:</span> <span className="font-bold">{results.stampingCost?.toFixed(1)} ريال</span></div>
+                          <div className="text-xs flex justify-between border-t border-[#b99ecb] pt-1 col-span-2 text-[#337159]"><span>إجمالي البصمة:</span> <span className="font-bold">{results.foilCost?.toFixed(1)} ريال</span></div>
                         </div>
                       )}
 
                       {isSpotUvEnabled && (
-                          <div className="col-span-2 md:col-span-3 bg-[#b99ecb]/10 p-3 rounded-lg border border-[#b99ecb] flex justify-between items-center mt-2">
-                              <div className="text-xs font-bold text-[#337159]">تكلفة سبوت يو في ({results.sheetsNeeded} شيت):</div>
-                              <div className="font-bold text-[#fa5732]">{results.spotUvCost} ريال</div>
-                          </div>
+                        <div className="col-span-2 md:col-span-3 bg-[#b99ecb]/10 p-3 rounded-lg border border-[#b99ecb] flex justify-between items-center mt-2">
+                          <div className="text-xs font-bold text-[#337159]">تكلفة سبوت يو في ({results.sheetsNeeded} شيت):</div>
+                          <div className="font-bold text-[#fa5732]">{results.spotUvCost} ريال</div>
+                        </div>
                       )}
 
                       {results.savingsMessage && !results.error && (
                         <div className="col-span-2 md:col-span-3 bg-[#337159]/10 border border-[#337159] text-[#337159] p-3 rounded-lg text-xs font-bold flex items-center gap-2 mt-2">
-                            <Info className="w-4 h-4 flex-shrink-0" />
-                            {results.savingsMessage}
+                          <Info className="w-4 h-4 flex-shrink-0" />
+                          {results.savingsMessage}
                         </div>
                       )}
 
@@ -1426,7 +1409,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                       <ResultBox label="عدد التكرار (UPS)" value={results.ups} />
                       <ResultBox label="ورق الطباعة" value={results.totalSheetsIncludingWaste} highlighted />
                       <ResultBox label="عدد الزنكات" value={results.numPlates} />
-                      
+
                       <div className="col-span-2 md:col-span-3 bg-[#337159]/5 p-3 rounded-lg border border-[#337159]/20 mt-2">
                         <div className="text-xs font-bold text-[#337159] mb-2 border-b border-[#337159]/10 pb-1">تفاصيل التكلفة:</div>
                         <div className="flex justify-between text-xs mb-1"><span>تكلفة الزنكات:</span> <b>{Math.round(results.plateCost)} ريال</b></div>
@@ -1443,7 +1426,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                   )}
                   {activeTab === 'uvdtf' && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      <ResultBox label="عدد في الصف" value={results.itemsPerRow} /><ResultBox label="عدد الصفوف" value={results.totalRows} /><ResultBox label="الأمتار المستهلكة" value={results.metersConsumed?.toFixed(3)} highlighted />
+                      <ResultBox label="عدد في الصف" value={results.stickersPerRow} /><ResultBox label="عدد الصفوف" value={results.totalRows} /><ResultBox label="الأمتار المستهلكة" value={results.metersConsumed?.toFixed(3)} highlighted />
                       <div className="col-span-2 md:col-span-3 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-2">
                         <div className="flex justify-between items-center text-slate-500"><span>السعر الأساسي:</span><span>{Math.round(results.finalPrice || 0)} ريال</span></div>
                         {results.discountPercent > 0 && (<div className="flex justify-between items-center text-[#337159]"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
@@ -1451,11 +1434,11 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Save Button */}
                   <div className="mt-6 flex justify-end col-span-full">
-                    <button 
-                      onClick={handleSaveQuote} 
+                    <button
+                      onClick={handleSaveQuote}
                       disabled={savingLog || !results.finalPrice}
                       className="bg-[#fa5732] hover:bg-[#d94a29] text-white py-3 px-8 rounded-xl font-bold shadow-lg flex items-center gap-2 disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
                     >
@@ -1483,14 +1466,14 @@ function AppContent() {
   const [adminUser, setAdminUser] = useState(null);
   const [loading, setLoading] = useState(true);
   // Added visibility settings to initial state
-  const [generalSettings, setGeneralSettings] = useState({ 
+  const [generalSettings, setGeneralSettings] = useState({
     allowPriceOverride: false,
     showRoll: true,
     showDigital: true,
     showOffset: true,
     showUvDtf: true
   });
-  
+
   const [prices, setPrices] = useState({
     rollUnitPrice: 80, defaultRollWidth: 120, digitalSheetPrice: 5, digitalPaperTypes: [], digitalAddons: [], rollDiscounts: [], digitalDiscounts: [], uvDtfDiscounts: [],
     digitalSheetSizes: [{ name: 'ربع ورق (33×48)', width: 33, height: 48 }, { name: 'شيت طويل (33×100)', width: 33, height: 100 }],
@@ -1545,12 +1528,12 @@ function AppContent() {
         // Merge with defaults to ensure all keys exist for new features
         setGeneralSettings(prev => ({ ...prev, ...data }));
       } else {
-        setDoc(generalRef, { 
+        setDoc(generalRef, {
           allowPriceOverride: false,
           showRoll: true,
           showDigital: true,
           showOffset: true,
-          showUvDtf: true 
+          showUvDtf: true
         });
       }
     });
@@ -1559,7 +1542,7 @@ function AppContent() {
       unsubPrice();
       unsubGeneral();
     };
-  }, [loading]);
+  }, [loading, prices, generalSettings]);
 
   const handleUpdatePrice = async (newPrices) => {
     try {
@@ -1583,14 +1566,14 @@ function AppContent() {
 
   const handleAdminLogin = (user) => {
     if (user.role === 'admin') {
-        setAdminUser(user);
-        setView('admin');
+      setAdminUser(user);
+      setView('admin');
     } else {
-        alert("هذا الحساب ليس لديه صلاحيات مسؤول");
+      alert("هذا الحساب ليس لديه صلاحيات مسؤول");
     }
   };
 
-  const handleLogout = () => { 
+  const handleLogout = () => {
     setAdminUser(null);
     setView('calculator');
   };
@@ -1602,10 +1585,10 @@ function AppContent() {
   }
 
   if (view === 'admin' && adminUser) {
-    return <AdminPanel 
-      prices={prices} 
-      onUpdatePrice={handleUpdatePrice} 
-      onLogout={handleLogout} 
+    return <AdminPanel
+      prices={prices}
+      onUpdatePrice={handleUpdatePrice}
+      onLogout={handleLogout}
       currentUser={adminUser}
       generalSettings={generalSettings}
       onUpdateGeneralSettings={handleUpdateGeneralSettings}
@@ -1615,10 +1598,10 @@ function AppContent() {
   // Default View: Calculator (No Login Required)
   return (
     <div className="min-h-screen bg-slate-100 font-sans" dir="rtl">
-      <CalculatorApp 
-        prices={prices} 
-        onAdminLogin={() => setView('login')} 
-        currentUser={{ name: 'موظف عام', uid: 'guest' }} 
+      <CalculatorApp
+        prices={prices}
+        onAdminLogin={() => setView('login')}
+        currentUser={{ name: 'موظف عام', uid: 'guest' }}
         generalSettings={generalSettings}
       />
     </div>
