@@ -15,7 +15,7 @@ import {
   collection,
   arrayUnion
 } from 'firebase/firestore';
-import { LogOut, Lock, Save, Palette, Scroll, Layout, Trash2, Plus, Maximize, User, Mail, Key, Users, UserPlus, Database, FileJson, Layers, Percent, History, FileText, ArrowRight, ToggleLeft, ToggleRight, Sliders, Eye, EyeOff, Stamp, Factory, Ban, Info, Sparkles, AlertTriangle } from 'lucide-react';
+import { LogOut, Lock, Save, Palette, Scroll, Layout, Trash2, Plus, Maximize, Mail, Key, Users, UserPlus, Database, FileJson, Layers, Percent, History, FileText, ArrowRight, ToggleLeft, ToggleRight, Sliders, Eye, EyeOff, Stamp, Factory, Ban, Info, Sparkles, AlertTriangle } from 'lucide-react';
 
 // --- Firebase Setup ---
 const firebaseConfig = {
@@ -105,7 +105,7 @@ const ResultBox = ({ label, value, highlighted = false }) => (
 );
 
 const AuthScreen = ({ onLoginSuccess, onCancel }) => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -835,11 +835,12 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
         setSelectedPaperIndex(0);
       }
     }
-  }, [activePapers.length, activeTab]);
+  }, [activePapers.length, activeTab, selectedPaperIndex]);
 
   useEffect(() => { setInputs(prev => ({ ...prev, rollWidth: prices.defaultRollWidth || 100 })); }, [prices.defaultRollWidth]);
   const handleInput = (e) => { const { name, value } = e.target; setInputs(prev => ({ ...prev, [name]: parseFloat(value) || 0 })); };
   const handleFoilInput = (e) => { const { name, value } = e.target; setFoilInputs(prev => ({ ...prev, [name]: parseFloat(value) || 0 })); };
+  // eslint-disable-next-line no-unused-vars
   const handleFaceChange = (e) => { setInputs(prev => ({ ...prev, offsetFaces: e.target.value })); };
 
 
@@ -865,6 +866,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
 
   const results = useMemo(() => {
     let unitPrice = 0;
+    // eslint-disable-next-line no-unused-vars
     const isCustomPriceActive = generalSettings?.allowPriceOverride && customUnitPrice !== '' && !isNaN(parseFloat(customUnitPrice));
 
     // Check if manual price override is enabled and enforce input
@@ -1124,7 +1126,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
       return { itemsPerRow, totalRows, metersConsumed, finalPrice, discountPercent, discountAmount, priceAfterDiscount, details: `UV DTF: ${w}x${h}cm (كمية: ${qty})` };
     }
     return {};
-  }, [inputs, foilInputs, prices, activeTab, selectedPaperIndex, selectedSheetSizeIndex, selectedAddonsIndices, customUnitPrice, generalSettings, activePapers, isFoilEnabled, isSpotUvEnabled, activeOffsetPapers, selectedOffsetPaperIndex]);
+  }, [inputs, foilInputs, prices, activeTab, selectedPaperIndex, selectedSheetSizeIndex, selectedAddonsIndices, customUnitPrice, generalSettings, activePapers, isFoilEnabled, isSpotUvEnabled, activeOffsetPapers, selectedOffsetPaperIndex, cuttingType]);
 
   const handleSaveQuote = async () => {
     setSavingLog(true);
@@ -1147,6 +1149,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
     setSavingLog(false);
   };
 
+  // eslint-disable-next-line no-unused-vars
   const getSystemPriceDisplay = () => {
     if (activeTab === 'roll') return prices.rollUnitPrice;
     if (activeTab === 'uvdtf') return prices.uvDtfPrice;
@@ -1536,7 +1539,7 @@ function AppContent() {
     document.head.appendChild(style);
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
     if (loading) return;
     const priceDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'pricing');
     const generalRef = doc(db, ...GENERAL_SETTINGS_PATH);
