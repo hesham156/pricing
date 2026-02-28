@@ -1539,7 +1539,7 @@ function AppContent() {
     document.head.appendChild(style);
   }, []);
 
-  useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
     if (loading) return;
     const priceDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'pricing');
     const generalRef = doc(db, ...GENERAL_SETTINGS_PATH);
@@ -1572,6 +1572,7 @@ function AppContent() {
       unsubPrice();
       unsubGeneral();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
   const handleUpdatePrice = async (newPrices) => {
