@@ -808,6 +808,8 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
   const [isSpotUvEnabled, setIsSpotUvEnabled] = useState(false);
   const [savingLog, setSavingLog] = useState(false);
   const [cuttingType, setCuttingType] = useState('normal'); // 'normal' = قص عادي | 'diecut' = قص داي كت
+  const [isFoldingEnabled, setIsFoldingEnabled] = useState(false); // الثنية
+  const [isPunchingEnabled, setIsPunchingEnabled] = useState(false); // التخريم
 
   // Set initial active tab based on visibility settings
   useEffect(() => {
@@ -849,6 +851,8 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
     setIsFoilEnabled(false); // Reset foil toggle on tab change
     setIsSpotUvEnabled(false); // Reset Spot UV
     setFoilInputs({ width: 0, height: 0 }); // Reset Foil dims
+    setIsFoldingEnabled(false); // Reset Folding
+    setIsPunchingEnabled(false); // Reset Punching
   }, [activeTab, selectedPaperIndex]);
 
   const toggleAddon = (index) => {
@@ -1077,13 +1081,17 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
       // سعر القص لكل 1000
       const cuttingCostPer1000 = cuttingType === 'diecut' ? 240 : 120;
 
+      // تكلفة الثنية والتخريم (50 ريال لكل 1000)
+      const foldingCostPer1000 = isFoldingEnabled ? 50 : 0;
+      const punchingCostPer1000 = isPunchingEnabled ? 50 : 0;
+
       // المعادلة: CEILING(D/A,1) * CEILING(E/B,1) * C
       const ceilW = Math.ceil(itemW / fixedW);  // CEILING(عرض / ثابت العرض)
       const ceilH = Math.ceil(itemH / fixedH);  // CEILING(طول / ثابت الطول)
       const pricePer1000 = ceilW * ceilH * paperPricePer1000;
 
-      // السعر الإجمالي لكل 1000 شامل القص
-      const totalPricePer1000 = pricePer1000 + cuttingCostPer1000;
+      // السعر الإجمالي لكل 1000 شامل القص والإضافات
+      const totalPricePer1000 = pricePer1000 + cuttingCostPer1000 + foldingCostPer1000 + punchingCostPer1000;
 
       // سعر الحبة شامل
       const pricePerUnit = totalPricePer1000 / 1000;
@@ -1102,10 +1110,12 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
       const priceAfterDiscount = finalPrice - discountAmount;
 
       const cuttingLabel = cuttingType === 'diecut' ? 'قص داي كت' : 'قص عادي';
-      const details = `أوفست: ${paperName} - ${qty} قطعة - ${cuttingLabel}`;
+      let details = `أوفست: ${paperName} - ${qty} قطعة - ${cuttingLabel}`;
+      if (isFoldingEnabled) details += ` + ثنية`;
+      if (isPunchingEnabled) details += ` + تخريم`;
 
       return {
-        pricePer1000, cuttingCostPer1000, totalPricePer1000,
+        pricePer1000, cuttingCostPer1000, foldingCostPer1000, punchingCostPer1000, totalPricePer1000,
         pricePerUnit, rawTotal, priceWithTax,
         finalPrice, discountPercent, discountAmount, priceAfterDiscount,
         details, paperName, ceilW, ceilH,
@@ -1126,7 +1136,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
       return { itemsPerRow, totalRows, metersConsumed, finalPrice, discountPercent, discountAmount, priceAfterDiscount, details: `UV DTF: ${w}x${h}cm (كمية: ${qty})` };
     }
     return {};
-  }, [inputs, foilInputs, prices, activeTab, selectedPaperIndex, selectedSheetSizeIndex, selectedAddonsIndices, customUnitPrice, generalSettings, activePapers, isFoilEnabled, isSpotUvEnabled, activeOffsetPapers, selectedOffsetPaperIndex, cuttingType]);
+  }, [inputs, foilInputs, prices, activeTab, selectedPaperIndex, selectedSheetSizeIndex, selectedAddonsIndices, customUnitPrice, generalSettings, activePapers, isFoilEnabled, isSpotUvEnabled, activeOffsetPapers, selectedOffsetPaperIndex, cuttingType, isFoldingEnabled, isPunchingEnabled]);
 
   const handleSaveQuote = async () => {
     setSavingLog(true);
@@ -1325,6 +1335,35 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                       <option value="diecut">قص داي كت (240 ريال/1000)</option>
                     </select>
                   </div>
+                  {/* إضافات الأوفست */}
+                  <div className="md:col-span-3 grid grid-cols-2 gap-3 mt-1">
+                    <div
+                      onClick={() => setIsFoldingEnabled(!isFoldingEnabled)}
+                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all select-none ${isFoldingEnabled ? 'bg-[#337159]/10 border-[#337159]' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+                    >
+                      <div className="flex items-center gap-2 font-bold text-slate-700">
+                        <span className="text-xl">📄</span>
+                        <div>
+                          <div className="text-sm">الثنية</div>
+                          <div className="text-[10px] text-slate-400 font-normal">+50 ريال / 1000</div>
+                        </div>
+                      </div>
+                      {isFoldingEnabled ? <ToggleRight className="w-7 h-7 text-[#337159]" /> : <ToggleLeft className="w-7 h-7 text-slate-300" />}
+                    </div>
+                    <div
+                      onClick={() => setIsPunchingEnabled(!isPunchingEnabled)}
+                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all select-none ${isPunchingEnabled ? 'bg-[#337159]/10 border-[#337159]' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+                    >
+                      <div className="flex items-center gap-2 font-bold text-slate-700">
+                        <span className="text-xl">⚙️</span>
+                        <div>
+                          <div className="text-sm">التخريم</div>
+                          <div className="text-[10px] text-slate-400 font-normal">+50 ريال / 1000</div>
+                        </div>
+                      </div>
+                      {isPunchingEnabled ? <ToggleRight className="w-7 h-7 text-[#337159]" /> : <ToggleLeft className="w-7 h-7 text-slate-300" />}
+                    </div>
+                  </div>
                 </>
               )}
 
@@ -1414,20 +1453,48 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                       <ResultBox label="CEILING(طول)" value={results.ceilH} />
                       <ResultBox label="سعر الورق (لكل 1000)" value={results.paperPriceUsed} />
 
-                      <div className="col-span-2 md:col-span-3 bg-[#337159]/5 p-4 rounded-xl border border-[#337159]/20 mt-2 grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="bg-white p-3 rounded-lg border border-[#337159]/10 text-center">
-                          <div className="text-xs text-slate-500 mb-1">السعر لكل 1000</div>
-                          <div className="text-2xl font-black text-[#337159]">{results.pricePer1000?.toFixed(2)}</div>
-                          <div className="text-[10px] text-slate-400">ريال</div>
+                      <div className="col-span-2 md:col-span-3 bg-[#337159]/5 p-4 rounded-xl border border-[#337159]/20 mt-2 space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="bg-white p-3 rounded-lg border border-[#337159]/10 text-center">
+                            <div className="text-xs text-slate-500 mb-1">سعر الورق (لكل 1000)</div>
+                            <div className="text-2xl font-black text-[#337159]">{results.pricePer1000?.toFixed(2)}</div>
+                            <div className="text-[10px] text-slate-400">ريال</div>
+                          </div>
+                          <div className="bg-white p-3 rounded-lg border border-[#b99ecb]/30 text-center">
+                            <div className="text-xs text-slate-500 mb-1">+ قص {results.cuttingLabel} (لكل 1000)</div>
+                            <div className="text-2xl font-black text-[#b99ecb]">{results.cuttingCostPer1000?.toFixed(2)}</div>
+                            <div className="text-[10px] text-slate-400">ريال</div>
+                          </div>
+                          <div className="bg-white p-3 rounded-lg border border-amber-200 text-center">
+                            <div className="text-xs text-slate-500 mb-1">سعر الحبة الإجمالي</div>
+                            <div className="text-2xl font-black text-amber-600">{results.pricePerUnit?.toFixed(3)}</div>
+                            <div className="text-[10px] text-slate-400">ريال</div>
+                          </div>
                         </div>
-                        <div className="bg-white p-3 rounded-lg border border-[#b99ecb]/30 text-center">
-                          <div className="text-xs text-slate-500 mb-1">+ قص {results.cuttingLabel} (لكل 1000)</div>
-                          <div className="text-2xl font-black text-[#b99ecb]">{results.totalPricePer1000?.toFixed(2)}</div>
-                          <div className="text-[10px] text-slate-400">ريال (شامل القص)</div>
-                        </div>
-                        <div className="bg-white p-3 rounded-lg border border-amber-200 text-center">
-                          <div className="text-xs text-slate-500 mb-1">سعر الحبة شامل</div>
-                          <div className="text-2xl font-black text-amber-600">{results.pricePerUnit?.toFixed(3)}</div>
+                        {(isFoldingEnabled || isPunchingEnabled) && (
+                          <div className="bg-[#337159]/5 border border-[#337159]/20 rounded-lg p-3 grid grid-cols-2 gap-2">
+                            <div className="col-span-2 text-xs font-bold text-[#337159] mb-1">الإضافات (لكل 1000):</div>
+                            {isFoldingEnabled && (
+                              <div className="flex justify-between items-center text-xs bg-white rounded p-2 border border-[#337159]/10">
+                                <span className="flex items-center gap-1"><span>📄</span> الثنية</span>
+                                <span className="font-bold text-[#337159]">{results.foldingCostPer1000} ريال</span>
+                              </div>
+                            )}
+                            {isPunchingEnabled && (
+                              <div className="flex justify-between items-center text-xs bg-white rounded p-2 border border-[#337159]/10">
+                                <span className="flex items-center gap-1"><span>⚙️</span> التخريم</span>
+                                <span className="font-bold text-[#337159]">{results.punchingCostPer1000} ريال</span>
+                              </div>
+                            )}
+                            <div className="col-span-2 flex justify-between items-center text-xs font-bold border-t border-[#337159]/20 pt-2 text-[#337159]">
+                              <span>إجمالي الإضافات (لكل 1000)</span>
+                              <span>{(results.foldingCostPer1000 + results.punchingCostPer1000)} ريال</span>
+                            </div>
+                          </div>
+                        )}
+                        <div className="bg-white p-3 rounded-lg border border-[#337159]/30 text-center">
+                          <div className="text-xs text-slate-500 mb-1">الإجمالي لكل 1000 (شامل كل الإضافات)</div>
+                          <div className="text-2xl font-black text-[#fa5732]">{results.totalPricePer1000?.toFixed(2)}</div>
                           <div className="text-[10px] text-slate-400">ريال</div>
                         </div>
                       </div>
