@@ -874,7 +874,8 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
     const isCustomPriceActive = generalSettings?.allowPriceOverride && customUnitPrice !== '' && !isNaN(parseFloat(customUnitPrice));
 
     // Check if manual price override is enabled and enforce input
-    if (generalSettings?.allowPriceOverride) {
+    // Offset always uses paper price from list, never requires manual input
+    if (generalSettings?.allowPriceOverride && activeTab !== 'offset') {
       if (!customUnitPrice || isNaN(parseFloat(customUnitPrice))) {
         return { missingPrice: true }; // Changed from returning empty object
       }
@@ -1076,7 +1077,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
         paperPricePer1000 = activeOffsetPapers[selectedOffsetPaperIndex].price;
         paperName = activeOffsetPapers[selectedOffsetPaperIndex].name;
       }
-      if (isManualMode) { paperPricePer1000 = manualPrice; }
+      // Offset always reads price from the selected paper type, not from manual override
 
       // سعر القص لكل 1000
       const cuttingCostPer1000 = cuttingType === 'diecut' ? 240 : 120;
@@ -1086,9 +1087,23 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
       const punchingCostPer1000 = isPunchingEnabled ? 50 : 0;
 
       // المعادلة: CEILING(D/A,1) * CEILING(E/B,1) * C
-      const ceilW = Math.ceil(itemW / fixedW);  // CEILING(عرض / ثابت العرض)
-      const ceilH = Math.ceil(itemH / fixedH);  // CEILING(طول / ثابت الطول)
-      const pricePer1000 = ceilW * ceilH * paperPricePer1000;
+      // نجرب الاتجاهين ونختار الأفضل (الأقل تكلفة) - كما في جداول Google Sheet
+      // الاتجاه 1: العرض على A، الطول على B
+      const ceilW1 = Math.ceil(itemW / fixedW);
+      const ceilH1 = Math.ceil(itemH / fixedH);
+      const multiplier1 = ceilW1 * ceilH1;
+
+      // الاتجاه 2: العرض على B، الطول على A (تدوير القطعة)
+      const ceilW2 = Math.ceil(itemH / fixedW);
+      const ceilH2 = Math.ceil(itemW / fixedH);
+      const multiplier2 = ceilW2 * ceilH2;
+
+      // نختار الاتجاه ذو الضرب الأقل (الأرخص)
+      const bestMultiplier = Math.min(multiplier1, multiplier2);
+      const isRotated = multiplier2 < multiplier1;
+      const ceilW = isRotated ? ceilW2 : ceilW1;
+      const ceilH = isRotated ? ceilH2 : ceilH1;
+      const pricePer1000 = bestMultiplier * paperPricePer1000;
 
       // السعر الإجمالي لكل 1000 شامل القص والإضافات
       const totalPricePer1000 = pricePer1000 + cuttingCostPer1000 + foldingCostPer1000 + punchingCostPer1000;
@@ -1118,7 +1133,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
         pricePer1000, cuttingCostPer1000, foldingCostPer1000, punchingCostPer1000, totalPricePer1000,
         pricePerUnit, rawTotal, priceWithTax,
         finalPrice, discountPercent, discountAmount, priceAfterDiscount,
-        details, paperName, ceilW, ceilH,
+        details, paperName, ceilW, ceilH, bestMultiplier, isRotated,
         paperPriceUsed: paperPricePer1000,
         cuttingLabel
       };
@@ -1217,7 +1232,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
 
               {/* --- Custom Unit Price Override Input --- */}
-              {generalSettings?.allowPriceOverride && (
+              {generalSettings?.allowPriceOverride && activeTab !== 'offset' && (
                 <div className="md:col-span-3 mb-4 bg-orange-50 p-4 rounded-lg border border-orange-200">
                   <label className="block text-sm font-bold text-orange-800 mb-2">
                     {activeTab === 'roll' ? 'سعر المتر المربع (إجباري)' :
@@ -1452,6 +1467,13 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                       <ResultBox label="CEILING(عرض)" value={results.ceilW} />
                       <ResultBox label="CEILING(طول)" value={results.ceilH} />
                       <ResultBox label="سعر الورق (لكل 1000)" value={results.paperPriceUsed} />
+
+                      {results.isRotated && (
+                        <div className="col-span-2 md:col-span-3 bg-[#337159]/10 border border-[#337159] text-[#337159] p-3 rounded-lg text-xs font-bold flex items-center gap-2">
+                          <Info className="w-4 h-4 flex-shrink-0" />
+                          تم تدوير مقاس القطعة تلقائياً للحصول على أقل تكلفة (المضاعف: {results.bestMultiplier}).
+                        </div>
+                      )}
 
                       <div className="col-span-2 md:col-span-3 bg-[#337159]/5 p-4 rounded-xl border border-[#337159]/20 mt-2 space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
