@@ -1336,7 +1336,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                     <select value={selectedOffsetPaperIndex} onChange={(e) => setSelectedOffsetPaperIndex(Number(e.target.value))} className="w-full p-3 bg-[#337159]/5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#337159] outline-none font-bold text-lg text-slate-700">
                       {activeOffsetPapers.length > 0 ? (
                         activeOffsetPapers.map((type, idx) => (
-                          <option key={idx} value={idx}>{type.name} - ({type.price} ريال/1000)</option>
+                          <option key={idx} value={idx}>{type.name}</option>
                         ))
                       ) : (
                         <option value={0}>ورق افتراضي</option>
@@ -1466,7 +1466,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       <ResultBox label="CEILING(عرض)" value={results.ceilW} />
                       <ResultBox label="CEILING(طول)" value={results.ceilH} />
-                      <ResultBox label="سعر الورق (لكل 1000)" value={results.paperPriceUsed} />
+                      <ResultBox label={`سعر الورق (لكل 1000) - ${results.paperName || 'ورق أوفست'}`} value={results.paperPriceUsed} />
 
                       {results.isRotated && (
                         <div className="col-span-2 md:col-span-3 bg-[#337159]/10 border border-[#337159] text-[#337159] p-3 rounded-lg text-xs font-bold flex items-center gap-2">
