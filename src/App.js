@@ -95,6 +95,59 @@ const DiscountManager = ({ discounts, onChange, unitLabel }) => {
   );
 };
 
+const PriceTiersManager = ({ tiers, onChange, unitLabel }) => {
+  const [minQty, setMinQty] = useState('');
+  const [price, setPrice] = useState('');
+
+  const handleAdd = () => {
+    if (minQty === '' || price === '') return;
+    const newRule = { min: parseFloat(minQty), price: parseFloat(price) };
+    const newTiers = [...(tiers || []), newRule].sort((a, b) => a.min - b.min);
+    onChange(newTiers);
+    setMinQty('');
+    setPrice('');
+  };
+
+  const handleRemove = (index) => {
+    const newTiers = tiers.filter((_, i) => i !== index);
+    onChange(newTiers);
+  };
+
+  return (
+    <div className="bg-[#337159]/5 p-3 md:p-4 rounded-xl border border-[#337159]/20 mt-4">
+      <div className="flex items-center gap-2 mb-3 text-[#337159]">
+        <Layers className="w-5 h-5" />
+        <h4 className="font-bold text-sm">أسعار مخصصة بناءً على الاستهلاك</h4>
+      </div>
+
+      <div className="space-y-2 mb-3">
+        {(!tiers || tiers.length === 0) && <p className="text-xs text-slate-400 text-center">السعر الأساسي فقط هو المفعل أو لا توجد شرائح</p>}
+        {tiers?.map((rule, idx) => (
+          <div key={idx} className="flex justify-between items-center bg-white p-2 rounded border border-[#b99ecb]/30 text-sm">
+            <span>من <span className="font-bold text-[#337159]">{rule.min}</span> {unitLabel} فأكثر</span>
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-[#337159] bg-[#337159]/10 px-2 py-0.5 rounded text-xs md:text-sm">{rule.price} ريال للمتر</span>
+              <button onClick={() => handleRemove(idx)} className="text-slate-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-2 items-end border-t border-[#337159]/10 pt-3">
+        <div className="flex-1">
+          <label className="text-[10px] text-slate-500 block mb-1">الحد الأدنى ({unitLabel})</label>
+          <input type="number" value={minQty} step="0.1" onChange={(e) => setMinQty(e.target.value)} className="w-full p-2 text-sm border border-[#b99ecb] rounded outline-none focus:ring-1 focus:ring-[#337159]" placeholder="مثال: 4" />
+        </div>
+        <div className="w-24">
+          <label className="text-[10px] text-slate-500 block mb-1">سعر المتر (ريال)</label>
+          <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full p-2 text-sm border border-[#b99ecb] rounded outline-none focus:ring-1 focus:ring-[#337159]" placeholder="مثال: 120" />
+        </div>
+        <button onClick={handleAdd} className="bg-[#337159] hover:bg-[#2a5c48] text-white p-2 rounded"><Plus className="w-5 h-5" /></button>
+      </div>
+    </div>
+  );
+};
+
 const ResultBox = ({ label, value, highlighted = false }) => (
   <div className={`p-3 rounded-lg border ${highlighted ? 'bg-[#fa5732]/10 border-[#fa5732]/30' : 'bg-slate-50 border-slate-100'}`}>
     <div className="text-[10px] md:text-xs text-slate-500 mb-1">{label}</div>
@@ -367,6 +420,11 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
     if (!updatedPrices.rollDiscounts) updatedPrices.rollDiscounts = [];
     if (!updatedPrices.digitalDiscounts) updatedPrices.digitalDiscounts = [];
     if (!updatedPrices.uvDtfDiscounts) updatedPrices.uvDtfDiscounts = [];
+    if (!updatedPrices.uvDtfTiers) updatedPrices.uvDtfTiers = [
+      { min: 0, price: 150 },
+      { min: 4, price: 120 },
+      { min: 11, price: 95 }
+    ];
     if (!updatedPrices.offsetPaperTypes) updatedPrices.offsetPaperTypes = [];
     if (!updatedPrices.offsetDiscounts) updatedPrices.offsetDiscounts = [];
 
@@ -685,6 +743,31 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
             </div>
           </div>
         )}
+        {activeTab === 'uvdtf' && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex items-center gap-3 mb-6 text-[#337159] border-b border-[#337159]/20 pb-4"><Palette className="w-6 h-6" /><h3 className="font-bold text-xl">إعدادات حاسبة UV DTF</h3></div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-[#337159]/5 p-4 rounded-xl border border-[#337159]/20 shadow-sm">
+                <label className="block text-sm font-bold text-[#337159] mb-2">سعر المتر الطولي الأساسي (ريال)</label>
+                <input type="number" value={localPrices.uvDtfPrice || ''} onChange={(e) => handleChange('uvDtfPrice', e.target.value)} className="w-full p-3 border border-[#337159]/30 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg text-center font-bold" />
+              </div>
+              <div className="bg-[#337159]/5 p-4 rounded-xl border border-[#337159]/20 shadow-sm">
+                <label className="block text-sm font-bold text-[#337159] mb-2">عرض المسطح الفعلي (سم)</label>
+                <input type="number" value={localPrices.uvDtfRollWidth ?? 55} onChange={(e) => handleChange('uvDtfRollWidth', e.target.value)} className="w-full p-3 border border-[#337159]/30 rounded-lg focus:ring-2 focus:ring-[#337159] outline-none text-lg text-center font-bold" />
+                <p className="text-xs text-slate-400 mt-1">يُستخدم في المعادلة بدلاً من العرض الثابت (55 سم)</p>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-sm text-blue-800 mb-6">
+              <h5 className="font-bold mb-1">📐 معادلة الحساب المُستخدمة:</h5>
+              <p className="font-mono text-xs" dir="ltr">ROUND(CEILING(Qty / INT(RollWidth / (Height + 0.5)), 1) * (Width + 0.5) / 100, 2)</p>
+              <p className="text-xs mt-1">يُضاف 0.5 سم كهامش أمان للملصق، ويتم تجربة تدوير التصميم تلقائياً واختيار الوضع الذي يستهلك أمتاراً أقل وتطبيقها.</p>
+            </div>
+
+            <PriceTiersManager tiers={localPrices.uvDtfTiers} onChange={(newTiers) => handleDiscountChange('uvDtfTiers', newTiers)} unitLabel="متر طولي (استهلاك)" />
+          </div>
+        )}
 
         {activeTab === 'users' && <UserManagement />}
         {activeTab === 'history' && <HistoryLog />}
@@ -868,6 +951,12 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
     return applicable ? applicable.percent : 0;
   };
 
+  const getTieredUnitPrice = (value, tiers, defaultPrice) => {
+    if (!tiers || tiers.length === 0) return defaultPrice;
+    const applicable = [...tiers].reverse().find(rule => value >= rule.min);
+    return applicable ? applicable.price : defaultPrice;
+  };
+
   const results = useMemo(() => {
     let unitPrice = 0;
     // eslint-disable-next-line no-unused-vars
@@ -895,12 +984,15 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
 
       const stickersPerRow = Math.floor(rollW / (stickerW + 0.2)); const rowsNeeded = stickersPerRow > 0 ? Math.ceil(qty / stickersPerRow) : 0; const baseLengthMeters = (rowsNeeded * (stickerH + 0.2)) / 100; const marginCount = Math.floor(baseLengthMeters / 0.5); const finalLength = baseLengthMeters + (marginCount * 0.05); const area = finalLength * (rollW / 100);
 
-      let finalPrice = area * unitPrice * marginRate;
+      const rawPrice = area * unitPrice;
+      const pricePreTax = rawPrice * marginRate;
+      const tax = pricePreTax * taxRate;
+      let finalPrice = pricePreTax + tax;
 
       const discountPercent = getDiscountPercent(area, prices.rollDiscounts);
       const discountAmount = finalPrice * (discountPercent / 100);
       const priceAfterDiscount = finalPrice - discountAmount;
-      return { stickersPerRow, rowsNeeded, baseLengthMeters, marginCount, finalLength, area, finalPrice, discountPercent, discountAmount, priceAfterDiscount, details: `رول: ${stickerW}x${stickerH}cm (كمية: ${qty})` };
+      return { stickersPerRow, rowsNeeded, baseLengthMeters, marginCount, finalLength, area, pricePreTax, tax, finalPrice, discountPercent, discountAmount, priceAfterDiscount, details: `رول: ${stickerW}x${stickerH}cm (كمية: ${qty})` };
     }
     else if (activeTab === 'digital') {
       const stickerW = inputs.width; const stickerH = inputs.height; const qty = inputs.quantity;
@@ -1139,16 +1231,57 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
       };
     }
     else if (activeTab === 'uvdtf') {
-      const h = inputs.height; const w = inputs.width; const qty = inputs.quantity; const itemsPerRow = Math.floor(50 / (w + 0.2)); const totalRows = itemsPerRow > 0 ? Math.ceil(qty / itemsPerRow) : 0; const rawLength = (totalRows * (h + 0.2)) / 100; const marginPart = Math.floor(rawLength / 0.5) * 0.05; const metersConsumed = (rawLength + marginPart) * 0.5;
+      const h = inputs.height || 0; const w = inputs.width || 0; const qty = inputs.quantity || 0;
+      const rollW = prices.uvDtfRollWidth ?? 55;
+      
+      let error = null;
+      let metersConsumed = 0;
+      let itemsPerRow = 0;
+      let totalRows = 0;
+      let isRotated = false;
 
-      // If manual mode is on, use manualPrice (or 0 if empty). Else use system price.
-      unitPrice = isManualMode ? manualPrice : (prices.uvDtfPrice || 0);
+      if (h > 0 && w > 0 && qty > 0) {
+        const itemsNormal = Math.floor(rollW / (h + 0.5));
+        const itemsRotated = Math.floor(rollW / (w + 0.5));
 
-      const finalPrice = (metersConsumed * unitPrice) * marginRate;
-      const discountPercent = getDiscountPercent(metersConsumed, prices.uvDtfDiscounts);
-      const discountAmount = finalPrice * (discountPercent / 100);
-      const priceAfterDiscount = finalPrice - discountAmount;
-      return { itemsPerRow, totalRows, metersConsumed, finalPrice, discountPercent, discountAmount, priceAfterDiscount, details: `UV DTF: ${w}x${h}cm (كمية: ${qty})` };
+        if (itemsNormal === 0 && itemsRotated === 0) {
+          error = "الاستيكر أعرض من المسطح";
+        } else {
+          const rowsNormal = itemsNormal > 0 ? Math.ceil(qty / itemsNormal) : 0;
+          const lengthNormal = itemsNormal > 0 ? (rowsNormal * (w + 0.5)) / 100 : Infinity;
+
+          const rowsRotated = itemsRotated > 0 ? Math.ceil(qty / itemsRotated) : 0;
+          const lengthRotated = itemsRotated > 0 ? (rowsRotated * (h + 0.5)) / 100 : Infinity;
+
+          if (lengthNormal <= lengthRotated) {
+            itemsPerRow = itemsNormal;
+            totalRows = rowsNormal;
+            metersConsumed = Math.round(lengthNormal * 100) / 100;
+          } else {
+            itemsPerRow = itemsRotated;
+            totalRows = rowsRotated;
+            metersConsumed = Math.round(lengthRotated * 100) / 100;
+            isRotated = true;
+          }
+        }
+      }
+
+      // If manual mode is on, use manualPrice. Else determine price from tiers based on meters consumed.
+      const evaluatedUnitPrice = getTieredUnitPrice(metersConsumed, prices.uvDtfTiers, prices.uvDtfPrice || 0);
+      unitPrice = isManualMode ? manualPrice : evaluatedUnitPrice;
+
+      const pricePreTax = metersConsumed * unitPrice;
+      const tax = pricePreTax * taxRate;
+      const finalPrice = pricePreTax + tax;
+      
+      const discountPercent = 0; // Tiers replaced discounts for UV DTF
+      const discountAmount = 0;
+      const priceAfterDiscount = finalPrice;
+      
+      let details = `UV DTF: ${w}x${h}cm (كمية: ${qty})`;
+      if (isRotated) details += ' - تم التدوير';
+
+      return { itemsPerRow, totalRows, metersConsumed, pricePreTax, tax, finalPrice, discountPercent, discountAmount, priceAfterDiscount, details, error, evaluatedUnitPrice };
     }
     return {};
   }, [inputs, foilInputs, prices, activeTab, selectedPaperIndex, selectedSheetSizeIndex, selectedAddonsIndices, customUnitPrice, generalSettings, activePapers, isFoilEnabled, isSpotUvEnabled, activeOffsetPapers, selectedOffsetPaperIndex, cuttingType, isFoldingEnabled, isPunchingEnabled]);
@@ -1415,9 +1548,10 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <ResultBox label="العدد في الصف" value={results.stickersPerRow} /><ResultBox label="عدد الصفوف" value={results.rowsNeeded} /><ResultBox label="الطول الأساسي (م)" value={results.baseLengthMeters?.toFixed(2)} /><ResultBox label="عدد الهوامش" value={results.marginCount} /><ResultBox label="الطول النهائي (م)" value={results.finalLength?.toFixed(2)} highlighted /><ResultBox label="المساحة (م²)" value={results.area?.toFixed(2)} />
                       <div className="col-span-2 md:col-span-4 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-2">
-                        <div className="flex justify-between items-center text-slate-500"><span>السعر الأساسي:</span><span>{Math.round(results.finalPrice || 0)} ريال</span></div>
-                        {results.discountPercent > 0 && (<div className="flex justify-between items-center text-[#337159]"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
-                        <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-[#337159] text-lg">السعر النهائي (بعد الخصم):</span><span className="font-black text-3xl text-[#fa5732]">{Math.round(results.priceAfterDiscount || 0)} <span className="text-sm font-medium">ريال</span></span></div>
+                        <div className="flex justify-between items-center text-slate-500 text-sm"><span>السعر قبل الضريبة:</span><span>{results.pricePreTax?.toFixed(2)} ريال</span></div>
+                        <div className="flex justify-between items-center text-slate-500 text-sm"><span>الضريبة ({generalSettings?.taxRate ?? 15}%):</span><span>+{results.tax?.toFixed(2)} ريال</span></div>
+                        {results.discountPercent > 0 && (<div className="flex justify-between items-center text-[#337159] text-sm"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
+                        <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-[#337159] text-lg">السعر النهائي (شامل الضريبة):</span><span className="font-black text-3xl text-[#fa5732]">{Math.round(results.priceAfterDiscount || 0)} <span className="text-sm font-medium">ريال</span></span></div>
                       </div>
                     </div>
                   )}
@@ -1545,11 +1679,15 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                   )}
                   {activeTab === 'uvdtf' && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      <ResultBox label="عدد في الصف" value={results.itemsPerRow} /><ResultBox label="عدد الصفوف" value={results.totalRows} /><ResultBox label="الأمتار المستهلكة" value={results.metersConsumed?.toFixed(3)} highlighted />
+                      <ResultBox label="عدد في الصف" value={results.itemsPerRow} />
+                      <ResultBox label="عدد الصفوف" value={results.totalRows} />
+                      <ResultBox label="الأمتار المستهلكة" value={results.metersConsumed?.toFixed(3)} highlighted />
+                      <ResultBox label="سعر المتر المطبق" value={results.evaluatedUnitPrice} />
+                      
                       <div className="col-span-2 md:col-span-3 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-2">
-                        <div className="flex justify-between items-center text-slate-500"><span>السعر الأساسي:</span><span>{Math.round(results.finalPrice || 0)} ريال</span></div>
-                        {results.discountPercent > 0 && (<div className="flex justify-between items-center text-[#337159]"><span>خصم الكمية ({results.discountPercent}%):</span><span>-{Math.round(results.discountAmount)} ريال</span></div>)}
-                        <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-[#337159] text-lg">السعر النهائي (بعد الخصم):</span><span className="font-black text-3xl text-[#fa5732]">{Math.round(results.priceAfterDiscount || 0)} <span className="text-sm font-medium">ريال</span></span></div>
+                        <div className="flex justify-between items-center text-slate-500 text-sm"><span>السعر قبل الضريبة:</span><span>{results.pricePreTax?.toFixed(2)} ريال</span></div>
+                        <div className="flex justify-between items-center text-slate-500 text-sm"><span>الضريبة ({generalSettings?.taxRate ?? 15}%):</span><span>+{results.tax?.toFixed(2)} ريال</span></div>
+                        <div className="border-t border-slate-200 pt-2 flex justify-between items-center"><span className="font-bold text-[#337159] text-lg">السعر النهائي (شامل الضريبة):</span><span className="font-black text-3xl text-[#fa5732]">{Math.round(results.finalPrice || 0)} <span className="text-sm font-medium">ريال</span></span></div>
                       </div>
                     </div>
                   )}
