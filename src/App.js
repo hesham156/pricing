@@ -931,12 +931,12 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
 
   useEffect(() => {
     setCustomUnitPrice('');
-    setIsFoilEnabled(false); // Reset foil toggle on tab change
-    setIsSpotUvEnabled(false); // Reset Spot UV
-    setFoilInputs({ width: 0, height: 0 }); // Reset Foil dims
-    setIsFoldingEnabled(false); // Reset Folding
-    setIsPunchingEnabled(false); // Reset Punching
-  }, [activeTab, selectedPaperIndex]);
+    setIsFoilEnabled(false);
+    setIsSpotUvEnabled(false);
+    setFoilInputs({ width: 0, height: 0 });
+    setIsFoldingEnabled(false);
+    setIsPunchingEnabled(false);
+  }, [activeTab]);
 
   const toggleAddon = (index) => {
     setSelectedAddonsIndices(prev => {
@@ -982,7 +982,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
 
       unitPrice = isManualMode ? manualPrice : (prices.rollUnitPrice || 0);
 
-      const stickersPerRow = Math.floor(rollW / (stickerW + 0.2)); const rowsNeeded = stickersPerRow > 0 ? Math.ceil(qty / stickersPerRow) : 0; const baseLengthMeters = (rowsNeeded * (stickerH + 0.2)) / 100; const marginCount = Math.floor(baseLengthMeters / 0.5); const finalLength = baseLengthMeters + (marginCount * 0.05); const area = finalLength * (rollW / 100);
+      const stickersPerRow = Math.floor(rollW / (stickerW + 0.2)); const rowsNeeded = stickersPerRow > 0 ? Math.ceil(qty / stickersPerRow) : 0; const baseLengthMeters = (rowsNeeded * (stickerH + 0.2)) / 100; const marginCount = Math.floor(baseLengthMeters / 0.5); const finalLength = baseLengthMeters + (marginCount * 0.02); const area = finalLength * (rollW / 100);
 
       const rawPrice = area * unitPrice;
       const pricePreTax = rawPrice * marginRate;
