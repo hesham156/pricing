@@ -429,6 +429,8 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
     if (!updatedPrices.offsetDiscounts) updatedPrices.offsetDiscounts = [];
 
     // Default Offset Values
+    if (!updatedPrices.offsetFixedWidth) updatedPrices.offsetFixedWidth = 5;
+    if (!updatedPrices.offsetFixedHeight) updatedPrices.offsetFixedHeight = 9;
     if (!updatedPrices.offsetPlatePrice) updatedPrices.offsetPlatePrice = 50;
     if (!updatedPrices.offsetPrintPrice1000) updatedPrices.offsetPrintPrice1000 = 80;
     if (!updatedPrices.offsetMinQty) updatedPrices.offsetMinQty = 1000;
@@ -1158,49 +1160,33 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
       const itemH = inputs.height;
       const qty = inputs.quantity;
 
-      // ثابت العرض وثابت الطول (من إعدادات الإدارة)
+      // ثابت العرض (A) وثابت الطول (B) من إعدادات الإدارة
       const fixedW = prices.offsetFixedWidth || 5;
       const fixedH = prices.offsetFixedHeight || 9;
 
-      // سعر الورق لكل 1000 (C في المعادلة)
-      let paperPricePer1000 = 0;
+      // اسم الورق المختار (للعرض في التسعيرة فقط - لا يدخل في المعادلة)
       let paperName = 'ورق أوفست';
       if (activeOffsetPapers.length > 0 && activeOffsetPapers[selectedOffsetPaperIndex]) {
-        paperPricePer1000 = activeOffsetPapers[selectedOffsetPaperIndex].price;
         paperName = activeOffsetPapers[selectedOffsetPaperIndex].name;
       }
-      // Offset always reads price from the selected paper type, not from manual override
 
-      // سعر القص لكل 1000
-      const cuttingCostPer1000 = cuttingType === 'diecut' ? 240 : 120;
+      // متغير التسعير (C في المعادلة): قص عادي = 120، داي كت = 240
+      const pricingVariable = cuttingType === 'diecut' ? 240 : 120;
 
-      // تكلفة الثنية والتخريم (50 ريال لكل 1000)
+      // تكلفة الثنية والتخريم (50 ريال لكل 1000) - تكاليف إضافية
       const foldingCostPer1000 = isFoldingEnabled ? 50 : 0;
       const punchingCostPer1000 = isPunchingEnabled ? 50 : 0;
 
-      // المعادلة: CEILING(D/A,1) * CEILING(E/B,1) * C
-      // نجرب الاتجاهين ونختار الأفضل (الأقل تكلفة) - كما في جداول Google Sheet
-      // الاتجاه 1: العرض على A، الطول على B
-      const ceilW1 = Math.ceil(itemW / fixedW);
-      const ceilH1 = Math.ceil(itemH / fixedH);
-      const multiplier1 = ceilW1 * ceilH1;
+      // المعادلة: السعر لكل 1000 = CEILING(العرض/A,1) * CEILING(الطول/B,1) * C
+      const ceilW = Math.ceil(itemW / fixedW);
+      const ceilH = Math.ceil(itemH / fixedH);
+      const multiplier = ceilW * ceilH;
+      const pricePer1000 = multiplier * pricingVariable;
 
-      // الاتجاه 2: العرض على B، الطول على A (تدوير القطعة)
-      const ceilW2 = Math.ceil(itemH / fixedW);
-      const ceilH2 = Math.ceil(itemW / fixedH);
-      const multiplier2 = ceilW2 * ceilH2;
+      // السعر الإجمالي لكل 1000 شامل الإضافات (المعادلة تتضمن القص داخل C)
+      const totalPricePer1000 = pricePer1000 + foldingCostPer1000 + punchingCostPer1000;
 
-      // نختار الاتجاه ذو الضرب الأقل (الأرخص)
-      const bestMultiplier = Math.min(multiplier1, multiplier2);
-      const isRotated = multiplier2 < multiplier1;
-      const ceilW = isRotated ? ceilW2 : ceilW1;
-      const ceilH = isRotated ? ceilH2 : ceilH1;
-      const pricePer1000 = bestMultiplier * paperPricePer1000;
-
-      // السعر الإجمالي لكل 1000 شامل القص والإضافات
-      const totalPricePer1000 = pricePer1000 + cuttingCostPer1000 + foldingCostPer1000 + punchingCostPer1000;
-
-      // سعر الحبة شامل
+      // سعر الحبة (قبل الضريبة)
       const pricePerUnit = totalPricePer1000 / 1000;
 
       // السعر الإجمالي للكمية
@@ -1222,11 +1208,10 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
       if (isPunchingEnabled) details += ` + تخريم`;
 
       return {
-        pricePer1000, cuttingCostPer1000, foldingCostPer1000, punchingCostPer1000, totalPricePer1000,
+        pricePer1000, pricingVariable, foldingCostPer1000, punchingCostPer1000, totalPricePer1000,
         pricePerUnit, rawTotal, priceWithTax,
         finalPrice, discountPercent, discountAmount, priceAfterDiscount,
-        details, paperName, ceilW, ceilH, bestMultiplier, isRotated,
-        paperPriceUsed: paperPricePer1000,
+        details, paperName, ceilW, ceilH, multiplier,
         cuttingLabel
       };
     }
@@ -1600,29 +1585,22 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       <ResultBox label="CEILING(عرض)" value={results.ceilW} />
                       <ResultBox label="CEILING(طول)" value={results.ceilH} />
-                      <ResultBox label={`سعر الورق (لكل 1000) - ${results.paperName || 'ورق أوفست'}`} value={results.paperPriceUsed} />
-
-                      {results.isRotated && (
-                        <div className="col-span-2 md:col-span-3 bg-[#337159]/10 border border-[#337159] text-[#337159] p-3 rounded-lg text-xs font-bold flex items-center gap-2">
-                          <Info className="w-4 h-4 flex-shrink-0" />
-                          تم تدوير مقاس القطعة تلقائياً للحصول على أقل تكلفة (المضاعف: {results.bestMultiplier}).
-                        </div>
-                      )}
+                      <ResultBox label={`متغير التسعير (C) - ${results.cuttingLabel}`} value={results.pricingVariable} />
 
                       <div className="col-span-2 md:col-span-3 bg-[#337159]/5 p-4 rounded-xl border border-[#337159]/20 mt-2 space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           <div className="bg-white p-3 rounded-lg border border-[#337159]/10 text-center">
-                            <div className="text-xs text-slate-500 mb-1">سعر الورق (لكل 1000)</div>
+                            <div className="text-xs text-slate-500 mb-1">السعر لكل 1000 (المعادلة)</div>
                             <div className="text-2xl font-black text-[#337159]">{results.pricePer1000?.toFixed(2)}</div>
-                            <div className="text-[10px] text-slate-400">ريال</div>
+                            <div className="text-[10px] text-slate-400">CEILING × CEILING × C</div>
                           </div>
                           <div className="bg-white p-3 rounded-lg border border-[#b99ecb]/30 text-center">
-                            <div className="text-xs text-slate-500 mb-1">+ قص {results.cuttingLabel} (لكل 1000)</div>
-                            <div className="text-2xl font-black text-[#b99ecb]">{results.cuttingCostPer1000?.toFixed(2)}</div>
-                            <div className="text-[10px] text-slate-400">ريال</div>
+                            <div className="text-xs text-slate-500 mb-1">المضاعف (CEILING × CEILING)</div>
+                            <div className="text-2xl font-black text-[#b99ecb]">{results.multiplier}</div>
+                            <div className="text-[10px] text-slate-400">{results.ceilW} × {results.ceilH}</div>
                           </div>
                           <div className="bg-white p-3 rounded-lg border border-amber-200 text-center">
-                            <div className="text-xs text-slate-500 mb-1">سعر الحبة الإجمالي</div>
+                            <div className="text-xs text-slate-500 mb-1">سعر الحبة (قبل الضريبة)</div>
                             <div className="text-2xl font-black text-amber-600">{results.pricePerUnit?.toFixed(3)}</div>
                             <div className="text-[10px] text-slate-400">ريال</div>
                           </div>
@@ -1737,6 +1715,7 @@ function AppContent() {
     sheetWidth: 33, sheetHeight: 48, uvDtfPrice: 150,
     foilMoldPricePerCm2: 1.15, foilMinMoldPrice: 150, foilStampingUnitPrice: 0.40,
     // Offset Defaults
+    offsetFixedWidth: 5, offsetFixedHeight: 9,
     offsetPlatePrice: 50, offsetPrintPrice1000: 80, offsetMinQty: 1000, offsetPaperTypes: [], offsetDiscounts: [],
     // New Toggle default
     showDigitalPaperField: true
