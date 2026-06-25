@@ -15,7 +15,7 @@ import {
   collection,
   arrayUnion
 } from 'firebase/firestore';
-import { LogOut, Lock, Save, Palette, Scroll, Layout, Trash2, Plus, Maximize, Mail, Key, Users, UserPlus, Database, FileJson, Layers, Percent, History, FileText, ArrowRight, ToggleLeft, ToggleRight, Sliders, Eye, EyeOff, Stamp, Factory, Ban, Info, Sparkles, AlertTriangle } from 'lucide-react';
+import { LogOut, Lock, Save, Palette, Scroll, Layout, Trash2, Plus, Maximize, Mail, Key, Users, UserPlus, Database, FileJson, Layers, Percent, History, FileText, ToggleLeft, ToggleRight, Sliders, Eye, EyeOff, Stamp, Factory, Ban, Info, Sparkles, AlertTriangle } from 'lucide-react';
 
 // --- Firebase Setup ---
 const firebaseConfig = {
@@ -157,8 +157,7 @@ const ResultBox = ({ label, value, highlighted = false }) => (
   </div>
 );
 
-const AuthScreen = ({ onLoginSuccess, onCancel }) => {
-  const [isLogin] = useState(true);
+const AuthScreen = ({ onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -189,18 +188,13 @@ const AuthScreen = ({ onLoginSuccess, onCancel }) => {
         currentUsers = usersSnap.data().list || [];
       }
 
-      if (isLogin) {
-        const foundUser = currentUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      const foundUser = currentUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
 
-        if (foundUser) {
-          if (foundUser.role === 'admin') {
-            onLoginSuccess(foundUser);
-          } else {
-            setError('هذا الحساب ليس لديه صلاحيات مسؤول.');
-          }
-        } else {
-          setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
-        }
+      if (foundUser) {
+        // يُسمح للموظفين والمسؤولين بالدخول، كلٌّ حسب صلاحيته
+        onLoginSuccess(foundUser);
+      } else {
+        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
       }
     } catch (err) {
       console.error(err);
@@ -212,19 +206,12 @@ const AuthScreen = ({ onLoginSuccess, onCancel }) => {
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4" dir="rtl">
       <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl max-w-md w-full relative border-t-4 border-[#337159]">
-        <button
-          onClick={onCancel}
-          className="absolute top-4 left-4 text-slate-400 hover:text-[#337159] flex items-center gap-1 text-sm font-bold transition-colors"
-        >
-          <ArrowRight className="w-4 h-4" /> رجوع
-        </button>
-
         <div className="text-center mb-8 mt-4">
           <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 flex items-center justify-center p-1">
             <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-[#337159]">دخول المسؤولين</h1>
-          <p className="text-slate-500 text-sm mt-1">يرجى تسجيل الدخول للوصول للإعدادات</p>
+          <h1 className="text-2xl font-bold text-[#337159]">تسجيل الدخول</h1>
+          <p className="text-slate-500 text-sm mt-1">يرجى تسجيل الدخول للوصول إلى الحاسبات</p>
         </div>
 
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center border border-red-100">{error}</div>}
@@ -849,6 +836,13 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
                   {localGeneral.showUvDtf !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
                 </button>
               </div>
+
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-slate-700 font-medium"><Layers className="w-4 h-4" /> حاسبة بوكسات الأوفست</span>
+                <button onClick={() => toggleGeneralSetting('showOffsetBox')} className={`p-1 rounded-full transition-colors ${localGeneral.showOffsetBox !== false ? 'text-[#337159]' : 'text-slate-300'}`}>
+                  {localGeneral.showOffsetBox !== false ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
+                </button>
+              </div>
             </div>
 
           </div>
@@ -877,7 +871,383 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
 };
 
 // 5. الحاسبة (الموظف)
-const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) => {
+// ===== حاسبة بوكسات الأوفست (Offset Boxes) — منقولة من ProSticker =====
+const OB_MACHINES = {
+  'ربع': { label: 'ربع 35×50', sheetW: 35, sheetH: 50, maxFlatW: 47, maxFlatH: 33, model: 'tiered', setup: 1050, tier1: 0.30, tier2: 0.65, tier3: 0.61 },
+  'نص': { label: 'نص 50×70', sheetW: 50, sheetH: 70, maxFlatW: 69, maxFlatH: 49, model: 'tiered', setup: 1467, tier1: 1.07, tier2: 1.25, tier3: 1.09 },
+  'كامل': { label: 'كامل 70×100', sheetW: 70, sheetH: 100, maxFlatW: 99, maxFlatH: 69, model: 'detailed', printTable: { 1000: 450, 2000: 600, 3000: 700, 5000: 900, 10000: 1500 }, diePerThousand1: 250, diePerThousandExtra: 150, plate: 600, celloPerSheet: 0.60 }
+};
+const OB_CELLO_PER_UNIT_SMALL = 0.20;
+const OB_BASE_PAPER_PRICE = 1.35;
+const OB_WASTAGE = 1.05;
+const OB_QUANTITIES = [500, 1000, 3000, 5000, 10000];
+const OB_FACES_MULTIPLIER = { 1: 1.0, 2: 1.5 };
+const OB_DIGITAL_QUANTITIES = [50, 100, 250];
+const OB_DIGITAL_PRICES = { 50: 6.90, 100: 5.75, 250: 4.60 };
+const OB_DIGITAL_PRINT_2FACE_ADD = 1.15;
+const OB_DIGITAL_CELLO_PER_FACE = 0.60;
+const OB_DIGITAL_AREA_W = 47;
+const OB_DIGITAL_AREA_H = 33;
+const OB_DIGITAL_B_PRICES = { 50: 11.50, 100: 9.20, 250: 8.00 };
+const OB_DIGITAL_B_PRINT_2FACE_ADD = 1.00;
+const OB_DIGITAL_B_AREA_W = 99;
+const OB_DIGITAL_B_AREA_H = 32;
+
+function obNesting(flatL, flatW, sheetW, sheetH, safety = 1.0) {
+  const usableW = sheetW - safety;
+  const usableH = sheetH - safety;
+  const a = Math.floor(usableW / flatL) * Math.floor(usableH / flatW);
+  const b = Math.floor(usableW / flatW) * Math.floor(usableH / flatL);
+  return Math.max(a, b);
+}
+function obPickMachine(flatL, flatW) {
+  for (const key of ['ربع', 'نص', 'كامل']) {
+    const m = OB_MACHINES[key];
+    const fits = (flatL <= m.maxFlatW && flatW <= m.maxFlatH) || (flatL <= m.maxFlatH && flatW <= m.maxFlatW);
+    if (fits) return key;
+  }
+  return null;
+}
+function obInterpolatePrint(qty, table) {
+  if (qty in table) return table[qty];
+  const keys = Object.keys(table).map(Number).sort((a, b) => a - b);
+  if (qty <= keys[0]) return table[keys[0]];
+  if (qty >= keys[keys.length - 1]) {
+    const last = keys[keys.length - 1], prev = keys[keys.length - 2];
+    const slope = (table[last] - table[prev]) / (last - prev);
+    return table[last] + slope * (qty - last);
+  }
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (keys[i] <= qty && qty <= keys[i + 1]) {
+      const ratio = (qty - keys[i]) / (keys[i + 1] - keys[i]);
+      return table[keys[i]] + ratio * (table[keys[i + 1]] - table[keys[i]]);
+    }
+  }
+  return 0;
+}
+function obCalcCost(machineKey, qty, faces, celloFaces, paperPrice, copiesPerSheet) {
+  const m = OB_MACHINES[machineKey];
+  const faceMult = OB_FACES_MULTIPLIER[faces];
+  let sheetsNeeded = 0;
+  if (copiesPerSheet > 0) sheetsNeeded = Math.ceil((qty / copiesPerSheet) * OB_WASTAGE);
+  if (m.model === 'tiered') {
+    let tieredPrice;
+    if (qty <= 1000) tieredPrice = m.tier1 * qty;
+    else if (qty <= 5000) tieredPrice = m.tier1 * 1000 + m.tier2 * (qty - 1000);
+    else tieredPrice = m.tier1 * 1000 + m.tier2 * 4000 + m.tier3 * (qty - 5000);
+    const baseCost = m.setup + tieredPrice * faceMult;
+    const celloCost = OB_CELLO_PER_UNIT_SMALL * celloFaces * qty;
+    const paperAdjustment = sheetsNeeded * (paperPrice - OB_BASE_PAPER_PRICE);
+    return { model: 'tiered', setup: m.setup, tiered: tieredPrice * faceMult, cello: celloCost, paperAdjustment, sheets: sheetsNeeded, total: baseCost + celloCost + paperAdjustment };
+  }
+  const printCost = obInterpolatePrint(qty, m.printTable) * faceMult;
+  const totalK = Math.ceil(qty / 1000);
+  const dieCost = m.diePerThousand1 + (totalK - 1) * m.diePerThousandExtra;
+  const plateCost = m.plate;
+  const sheetsRaw = copiesPerSheet > 0 ? Math.ceil(qty / copiesPerSheet) : 0;
+  const celloCost = m.celloPerSheet * sheetsRaw * celloFaces;
+  const paperCost = sheetsNeeded * paperPrice;
+  return { model: 'detailed', print: printCost, die: dieCost, plate: plateCost, cello: celloCost, paper: paperCost, sheets: sheetsNeeded, total: printCost + dieCost + plateCost + celloCost + paperCost };
+}
+function obFmt(n, decimals = 0) {
+  return (n || 0).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+function obCalcDigitalFinal(qty, faces, celloFaces, digitalCopies, band) {
+  if (digitalCopies < 1) return null;
+  if (band === 'B') {
+    if (!(qty in OB_DIGITAL_B_PRICES)) return null;
+    let perSheet = OB_DIGITAL_B_PRICES[qty];
+    if (faces === 2) perSheet += OB_DIGITAL_B_PRINT_2FACE_ADD;
+    return perSheet / digitalCopies;
+  }
+  if (!(qty in OB_DIGITAL_PRICES)) return null;
+  let perSheet = OB_DIGITAL_PRICES[qty];
+  if (faces === 2) perSheet += OB_DIGITAL_PRINT_2FACE_ADD;
+  if (celloFaces === 0) perSheet -= OB_DIGITAL_CELLO_PER_FACE;
+  else if (celloFaces === 2) perSheet += OB_DIGITAL_CELLO_PER_FACE;
+  return perSheet / digitalCopies;
+}
+
+const OB_MACHINE_BADGE = {
+  'ربع': 'bg-blue-100 text-blue-800',
+  'نص': 'bg-orange-100 text-orange-800',
+  'كامل': 'bg-purple-100 text-purple-800'
+};
+
+const OffsetBoxesCalculator = () => {
+  const [productName, setProductName] = useState('');
+  const [flatL, setFlatL] = useState('38');
+  const [flatW, setFlatW] = useState('67');
+  const [paper, setPaper] = useState('انفربرش');
+  const [faces, setFaces] = useState(1);
+  const [cello, setCello] = useState(1);
+  const [paperPrice, setPaperPrice] = useState('1.35');
+  const [margin, setMargin] = useState('40');
+  const [vat, setVat] = useState('15');
+
+  const data = useMemo(() => {
+    const L = parseFloat(flatL) || 0;
+    const W = parseFloat(flatW) || 0;
+    const pp = parseFloat(paperPrice) || OB_BASE_PAPER_PRICE;
+    const marginR = (parseFloat(margin) || 0) / 100;
+    const vatRate = (parseFloat(vat) || 0) / 100;
+
+    if (!L || !W || L < 1 || W < 1) return { state: 'empty' };
+
+    const machineKey = obPickMachine(L, W);
+    if (!machineKey) return { state: 'oversize', L, W };
+
+    const m = OB_MACHINES[machineKey];
+    const copies = obNesting(L, W, m.sheetW, m.sheetH);
+
+    const digitalCopiesA = obNesting(L, W, OB_DIGITAL_AREA_W, OB_DIGITAL_AREA_H, 0);
+    const digitalCopiesB = obNesting(L, W, OB_DIGITAL_B_AREA_W, OB_DIGITAL_B_AREA_H, 0);
+    let band = null, digitalCopies = 0;
+    if (digitalCopiesA >= 1) { band = 'A'; digitalCopies = digitalCopiesA; }
+    else if (digitalCopiesB >= 1) { band = 'B'; digitalCopies = digitalCopiesB; }
+    const digitalEligible = band !== null;
+
+    const colDefs = [];
+    if (digitalEligible) OB_DIGITAL_QUANTITIES.forEach(q => colDefs.push({ q, type: 'digital' }));
+    OB_QUANTITIES.forEach(q => colDefs.push({ q, type: 'offset' }));
+
+    const cols = colDefs.map(c => {
+      if (c.type === 'digital') {
+        const finalPU = obCalcDigitalFinal(c.q, faces, cello, digitalCopies, band);
+        const preVatPU = finalPU / (1 + vatRate);
+        const preTotal = preVatPU * c.q;
+        return { ...c, perUnitPre: preVatPU, preTotal, vatAmt: preTotal * vatRate, finalTotal: finalPU * c.q, digital: true };
+      }
+      const cost = obCalcCost(machineKey, c.q, faces, cello, pp, copies);
+      const priceWithMargin = cost.total * (1 + marginR);
+      return { ...c, perUnitPre: priceWithMargin / c.q, preTotal: priceWithMargin, vatAmt: priceWithMargin * vatRate, finalTotal: priceWithMargin * (1 + vatRate), digital: false };
+    });
+
+    const refQty = 5000;
+    const refCost = obCalcCost(machineKey, refQty, faces, cello, pp, copies);
+    const refMarginAmt = refCost.total * marginR;
+    const refWithMargin = refCost.total + refMarginAmt;
+
+    return { state: 'ok', L, W, machineKey, m, copies, band, digitalCopies, digitalEligible, cols, vatRate, marginR, refQty, refCost, refMarginAmt, refWithMargin, faces, cello, paperPrice: pp };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flatL, flatW, paperPrice, margin, vat, faces, cello]);
+
+  const inputCls = "w-full p-2.5 border border-[#b99ecb] rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-[#337159] focus:border-[#337159]";
+  const labelCls = "block text-sm font-medium text-slate-700 mb-1.5";
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" dir="rtl">
+      {/* لوحة الإدخال */}
+      <div className="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-slate-50 border-b border-slate-100 p-4"><h3 className="font-bold text-slate-700 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#337159]"></span> بيانات البوكس</h3></div>
+        <div className="p-5 space-y-4">
+          <div>
+            <label className={labelCls}>اسم المنتج (اختياري)</label>
+            <input type="text" value={productName} onChange={e => setProductName(e.target.value)} className={inputCls} placeholder="مثال: صندوق كيك 20×20×9" />
+          </div>
+
+          <div className="bg-[#337159]/5 border-r-4 border-[#337159] rounded-lg p-3 text-xs text-[#337159] leading-relaxed">
+            <strong className="block mb-1">📐 خذ المقاس من ملف الـ Dieline</strong>
+            الفرد = القياس الكامل للورق بعد فرده قبل الطي، ويشمل كل اللسانات والكلابسات.
+          </div>
+
+          <div>
+            <label className={labelCls}>أبعاد الفرد (سم)</label>
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
+              <input type="number" step="0.1" min="1" value={flatL} onChange={e => setFlatL(e.target.value)} className={`${inputCls} text-center font-bold`} placeholder="الطول" />
+              <span className="text-slate-400 font-light">×</span>
+              <input type="number" step="0.1" min="1" value={flatW} onChange={e => setFlatW(e.target.value)} className={`${inputCls} text-center font-bold`} placeholder="العرض" />
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1.5">طول الفرد × عرض الفرد بعد التسطيح الكامل</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>نوع الورق</label>
+              <select value={paper} onChange={e => setPaper(e.target.value)} className={inputCls}>
+                <option value="انفربرش">انفربرش (أبيض)</option>
+                <option value="كرافت">كرافت (بني)</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>أوجه الطباعة</label>
+              <select value={faces} onChange={e => setFaces(parseInt(e.target.value))} className={inputCls}>
+                <option value={1}>وجه واحد</option>
+                <option value={2}>وجهين</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>السلوفان</label>
+              <select value={cello} onChange={e => setCello(parseInt(e.target.value))} className={inputCls}>
+                <option value={0}>بدون سلوفان</option>
+                <option value={1}>سلوفان وجه واحد</option>
+                <option value={2}>سلوفان وجهين</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>سعر شيت الورق (ر.س)</label>
+              <input type="number" min="0.1" max="20" step="0.05" value={paperPrice} onChange={e => setPaperPrice(e.target.value)} className={inputCls} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>هامش الربح (%)</label>
+              <input type="number" min="0" max="200" step="5" value={margin} onChange={e => setMargin(e.target.value)} className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>ضريبة القيمة المضافة (%)</label>
+              <input type="number" min="0" max="100" step="1" value={vat} onChange={e => setVat(e.target.value)} className={inputCls} />
+            </div>
+          </div>
+
+          {/* صندوق معلومات الماكينة */}
+          {data.state === 'ok' && (
+            <div className="bg-[#337159]/5 border-r-4 border-[#337159] rounded-lg p-3 text-xs space-y-1.5">
+              <div className="flex justify-between"><span className="text-slate-500">الفرد:</span><span className="font-bold text-[#337159]">{data.L.toFixed(1)} × {data.W.toFixed(1)} سم</span></div>
+              <div className="flex justify-between items-center"><span className="text-slate-500">الماكينة:</span><span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${OB_MACHINE_BADGE[data.machineKey]}`}>{data.m.label}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">شيت الماكينة:</span><span className="font-bold text-[#337159]">{data.m.sheetW} × {data.m.sheetH} سم</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">حد الفرد:</span><span className="font-bold text-[#337159]">{data.m.maxFlatW} × {data.m.maxFlatH} سم</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">نسخ في الشيت:</span><span className="font-bold text-[#337159]">{data.copies > 0 ? `${data.copies} نسخة` : '— (لا يدخل)'}</span></div>
+            </div>
+          )}
+
+          {data.state === 'oversize' && (
+            <div className="bg-red-50 border-r-4 border-red-500 text-red-700 rounded-lg p-3 text-xs font-medium">
+              ✕ مقاس الفرد أكبر من شيت 70×100 سم — يحتاج خامة خاصة وعرض سعر مخصّص من المورد.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* لوحة النتائج */}
+      <div className="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-slate-50 border-b border-slate-100 p-4 flex justify-between items-center gap-3 flex-wrap">
+          <div>
+            <h3 className="font-bold text-slate-700 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#fa5732]"></span> جدول الأسعار حسب الكمية</h3>
+            {productName && <p className="text-xs text-slate-500 mt-1">🏷 {productName}</p>}
+          </div>
+          <button onClick={() => window.print()} className="text-slate-500 hover:text-[#337159] px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 hover:border-[#337159] transition-colors">طباعة / حفظ PDF</button>
+        </div>
+        <div className="p-5 overflow-x-auto">
+          {data.state === 'empty' && (
+            <div className="text-center py-16 text-slate-400">
+              <div className="text-5xl mb-3 opacity-30">📐</div>
+              <div className="text-sm">أدخل أبعاد الفرد لعرض التسعير</div>
+            </div>
+          )}
+          {data.state === 'oversize' && (
+            <div className="text-center py-16 text-slate-400">
+              <div className="text-5xl mb-3 opacity-30">⚠</div>
+              <div className="text-sm">المقاس أكبر من حد الماكينات القياسية.<br />راجع المورد لعرض سعر مخصّص لخامة كبيرة.</div>
+            </div>
+          )}
+          {data.state === 'ok' && (
+            <>
+              <table className="w-full text-sm border-collapse whitespace-nowrap">
+                <thead>
+                  <tr>
+                    <th className="p-2.5 text-right text-[11px] font-bold text-slate-500 uppercase bg-slate-50 border-b border-slate-200">البيان</th>
+                    {data.cols.map((c, i) => (
+                      <th key={i} className={`p-2.5 text-center text-[11px] font-bold border-b border-slate-200 ${c.digital ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-500'}`}>
+                        {obFmt(c.q)} حبة
+                        {c.digital && <span className="block text-[9px] mt-0.5 opacity-80">ديجيتال</span>}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="p-2.5 text-right font-medium bg-slate-50 border-b border-slate-100">سعر الحبة (ر.س)</td>
+                    {data.cols.map((c, i) => (
+                      <td key={i} className={`p-2.5 text-center font-bold text-[#fa5732] border-b border-slate-100 ${c.digital ? 'bg-blue-50/40' : ''}`}>{obFmt(c.perUnitPre, 2)}</td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 text-right font-medium bg-slate-50 border-b border-slate-100">الإجمالي قبل الضريبة (ر.س)</td>
+                    {data.cols.map((c, i) => (
+                      <td key={i} className={`p-2.5 text-center font-semibold text-[#337159] border-b border-slate-100 ${c.digital ? 'bg-blue-50/40' : ''}`}>{obFmt(c.preTotal)}</td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 text-right font-medium bg-slate-50 border-b border-slate-100">ضريبة القيمة المضافة ({(data.vatRate * 100).toFixed(0)}%)</td>
+                    {data.cols.map((c, i) => (
+                      <td key={i} className={`p-2.5 text-center text-slate-600 border-b border-slate-100 ${c.digital ? 'bg-blue-50/40' : ''}`}>{obFmt(c.vatAmt)}</td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-2.5 text-right font-bold bg-amber-50 border-b border-slate-100">الإجمالي شامل الضريبة (ر.س)</td>
+                    {data.cols.map((c, i) => (
+                      <td key={i} className="p-2.5 text-center font-bold text-[#337159] bg-amber-50 border-b border-slate-100">{obFmt(c.finalTotal)}</td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+
+              {data.digitalEligible && (
+                <div className="mt-4 bg-amber-50 border-r-4 border-amber-500 text-amber-800 rounded-lg p-3 text-xs leading-relaxed">
+                  {data.band === 'A' ? (
+                    <><strong>الكميات الصغيرة (ديجيتال — فرد ≤ 47×33):</strong> الأسعار شاملة الضريبة، أساسها وجه طباعة + وجه سلوفان لحبة تملأ شيت 47×33. هذا المقاس يدخل منه <strong>{data.digitalCopies}</strong> حبة في الشيت، ويُقسَّم سعر الشيت عليها. الطباعة وجهين تضيف 1.15 ر.س للشيت، وكل وجه سلوفان 0.60 ر.س.</>
+                  ) : (
+                    <><strong>الكميات الصغيرة (ديجيتال — قطع طويلة، طول حتى 99 والعرض حتى 32 سم):</strong> الأسعار شاملة كل شيء حتى الضريبة، للوجه الواحد، والسلوفان مشمول ولا يغيّر السعر. هذا المقاس يدخل منه <strong>{data.digitalCopies}</strong> حبة في الشيت، ويُقسَّم سعر الشيت عليها. الطباعة وجهين تضيف 1 ر.س للشيت.</>
+                  )}
+                </div>
+              )}
+
+              {/* تفصيل التكلفة لكمية مرجعية */}
+              <div className="mt-6 bg-slate-50 rounded-xl p-4">
+                <h4 className="font-bold text-[#337159] text-sm mb-3">تفصيل التكلفة لكمية مرجعية ({obFmt(data.refQty)} حبة)</h4>
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="p-2 text-right text-[10px] font-bold text-slate-500 bg-white border-b border-slate-200">البند</th>
+                      <th className="p-2 text-center text-[10px] font-bold text-slate-500 bg-white border-b border-slate-200">القيمة (ر.س)</th>
+                      <th className="p-2 text-center text-[10px] font-bold text-slate-500 bg-white border-b border-slate-200">نسبة من الإجمالي</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.refCost.model === 'tiered' ? (
+                      <>
+                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">رسم التثبيت (قالب + إعداد الماكينة)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.setup)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.setup / data.refWithMargin * 100, 1)}%</td></tr>
+                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">الطباعة والتكسير (سُلّمي حسب الكمية)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.tiered)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.tiered / data.refWithMargin * 100, 1)}%</td></tr>
+                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">السلوفان ({data.cello} وجه × {OB_CELLO_PER_UNIT_SMALL.toFixed(2)} × {obFmt(data.refQty)})</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.cello)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.cello / data.refWithMargin * 100, 1)}%</td></tr>
+                        {Math.abs(data.refCost.paperAdjustment) > 0.5 && (
+                          <tr><td className="p-2 text-right bg-white border-b border-slate-100">تعديل سعر الورق ({data.refCost.sheets.toLocaleString()} شيت × {(data.paperPrice - OB_BASE_PAPER_PRICE).toFixed(2)} ر.س فرق)</td><td className="p-2 text-center bg-white border-b border-slate-100">{data.refCost.paperAdjustment > 0 ? '+' : ''}{obFmt(data.refCost.paperAdjustment)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.paperAdjustment / data.refWithMargin * 100, 1)}%</td></tr>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">الطباعة 4 لون ({data.faces} وجه × سعر الكمية)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.print)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.print / data.refWithMargin * 100, 1)}%</td></tr>
+                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">التكسير ({data.m.diePerThousand1} لأول 1000 + {Math.ceil(data.refQty / 1000) - 1} × {data.m.diePerThousandExtra})</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.die)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.die / data.refWithMargin * 100, 1)}%</td></tr>
+                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">القالب (ثابت)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.plate)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.plate / data.refWithMargin * 100, 1)}%</td></tr>
+                        {data.cello > 0 && (
+                          <tr><td className="p-2 text-right bg-white border-b border-slate-100">السلوفان ({data.cello} وجه × {data.m.celloPerSheet.toFixed(2)} ر.س × عدد الشيتات)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.cello)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.cello / data.refWithMargin * 100, 1)}%</td></tr>
+                        )}
+                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">الورق ({data.refCost.sheets.toLocaleString()} شيت × {data.paperPrice.toFixed(2)} ر.س)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.paper)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.paper / data.refWithMargin * 100, 1)}%</td></tr>
+                      </>
+                    )}
+                    <tr><td className="p-2 text-right bg-white border-b border-slate-100">هامش الربح ({(data.marginR * 100).toFixed(0)}%)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refMarginAmt)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refMarginAmt / data.refWithMargin * 100, 1)}%</td></tr>
+                    <tr><td className="p-2 text-right font-bold text-[#337159] bg-[#337159]/10">السعر النهائي (قبل الضريبة)</td><td className="p-2 text-center font-bold text-[#337159] bg-[#337159]/10">{obFmt(data.refWithMargin)}</td><td className="p-2 text-center font-bold text-[#337159] bg-[#337159]/10">100.0%</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-4 flex items-center gap-4 flex-wrap text-xs text-slate-500 bg-slate-50 rounded-lg p-3">
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#fa5732]"></span> سعر الحبة</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#337159]"></span> السعر الإجمالي</span>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CalculatorApp = ({ prices, onAdminLogin, onLogout, currentUser, isAdmin, generalSettings }) => {
   const [activeTab, setActiveTab] = useState('');
   const [inputs, setInputs] = useState({ width: 0, height: 0, quantity: 0, rollWidth: prices.defaultRollWidth || 100, offsetFaces: '1' });
   const [foilInputs, setFoilInputs] = useState({ width: 0, height: 0 });
@@ -903,6 +1273,7 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
       else if (generalSettings?.showDigital !== false) setActiveTab('digital');
       else if (generalSettings?.showOffset !== false) setActiveTab('offset');
       else if (generalSettings?.showUvDtf !== false) setActiveTab('uvdtf');
+      else if (generalSettings?.showOffsetBox !== false) setActiveTab('offsetbox');
     }
   }, [generalSettings, activeTab]);
 
@@ -1315,19 +1686,24 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
     return <div className="p-10 text-center text-slate-500">جاري تحميل الحاسبة...</div>;
   }
 
-  if (!activeTab) return (<div className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50"><Ban className="w-16 h-16 text-slate-300 mb-4" /><h2 className="text-xl font-bold text-slate-600">عذراً، جميع الحاسبات معطلة حالياً</h2><p className="text-sm text-slate-400 mt-2">يرجى التواصل مع المسؤول لتفعيل الخدمات.</p><button onClick={onAdminLogin} className="mt-8 text-slate-500 hover:text-[#fa5732] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 hover:border-[#fa5732] transition-colors"><Lock className="w-4 h-4" /> لوحة المسؤول</button></div>);
+  if (!activeTab) return (<div className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50"><Ban className="w-16 h-16 text-slate-300 mb-4" /><h2 className="text-xl font-bold text-slate-600">عذراً، جميع الحاسبات معطلة حالياً</h2><p className="text-sm text-slate-400 mt-2">يرجى التواصل مع المسؤول لتفعيل الخدمات.</p><div className="flex items-center gap-3 mt-8">{isAdmin && (<button onClick={onAdminLogin} className="text-slate-500 hover:text-[#fa5732] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 hover:border-[#fa5732] transition-colors"><Lock className="w-4 h-4" /> لوحة المسؤول</button>)}<button onClick={onLogout} className="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-red-100 transition-colors"><LogOut className="w-4 h-4" /> خروج</button></div></div>);
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8" dir="rtl">
+    <div className="max-w-full mx-auto p-4 md:p-8" dir="rtl">
       <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-xl shadow-sm border-t-4 border-[#337159]">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-slate-50 rounded-lg p-1 border border-slate-100"><img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" /></div>
           <div>
             <h2 className="text-xl font-bold text-[#337159]">حاسبة التسعير</h2>
-            <p className="text-sm text-slate-500">مرحباً بك في النظام</p>
+            <p className="text-sm text-slate-500">مرحباً بك، {currentUser?.name}</p>
           </div>
         </div>
-        <button onClick={onAdminLogin} className="text-slate-500 hover:text-[#fa5732] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 hover:border-[#fa5732] transition-colors"><Lock className="w-4 h-4" /> لوحة المسؤول</button>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <button onClick={onAdminLogin} className="text-slate-500 hover:text-[#fa5732] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 hover:border-[#fa5732] transition-colors"><Lock className="w-4 h-4" /> لوحة المسؤول</button>
+          )}
+          <button onClick={onLogout} className="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-red-100 transition-colors"><LogOut className="w-4 h-4" /> خروج</button>
+        </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-1 gap-3 lg:gap-4 content-start">
@@ -1343,8 +1719,15 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
           {generalSettings?.showUvDtf !== false && (
             <button onClick={() => setActiveTab('uvdtf')} className={`w-full text-right p-4 rounded-xl font-medium transition-all flex items-center gap-3 ${activeTab === 'uvdtf' ? 'bg-[#337159] text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50'}`}><Palette className="w-5 h-5 shrink-0" /> <span className="truncate">UV DTF</span></button>
           )}
+          {generalSettings?.showOffsetBox !== false && (
+            <button onClick={() => setActiveTab('offsetbox')} className={`w-full text-right p-4 rounded-xl font-medium transition-all flex items-center gap-3 ${activeTab === 'offsetbox' ? 'bg-[#337159] text-white shadow-lg' : 'bg-white text-slate-600 hover:bg-slate-50'}`}><Layers className="w-5 h-5 shrink-0" /> <span className="truncate">بوكسات الأوفست</span></button>
+          )}
         </div>
         <div className="lg:col-span-9 space-y-6">
+          {activeTab === 'offsetbox' ? (
+            <OffsetBoxesCalculator />
+          ) : (
+          <>
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="bg-slate-50 border-b border-slate-100 p-4 flex justify-between items-center"><h3 className="font-bold text-slate-700 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#337159]"></span> المدخلات (بيانات العميل)</h3></div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1686,6 +2069,8 @@ const CalculatorApp = ({ prices, onAdminLogin, currentUser, generalSettings }) =
             </div>
           </div>
           <div className="text-center text-xs text-slate-400 mt-8">{activeTab === 'digital' ? `السعر المطبق للورق: ${results.sheetPriceUsed} ريال | المقاس: ${results.dims}` : activeTab === 'offset' ? `السعر لكل 1000: ${results.pricePer1000?.toFixed(2)} ريال | سعر الحبة: ${results.pricePerUnit?.toFixed(3)} ريال` : `الأسعار الأساسية: رول: ${prices.rollUnitPrice} | UV: ${prices.uvDtfPrice}`}</div>
+          </>
+          )}
         </div>
       </div>
     </div>
@@ -1697,8 +2082,15 @@ export default function App() {
 }
 
 function AppContent() {
-  const [view, setView] = useState('calculator'); // 'calculator', 'login', 'admin'
-  const [adminUser, setAdminUser] = useState(null);
+  const [view, setView] = useState('calculator'); // 'calculator', 'admin'
+  const [loggedInUser, setLoggedInUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pricing_logged_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
   // Added visibility settings to initial state
   const [generalSettings, setGeneralSettings] = useState({
@@ -1706,7 +2098,8 @@ function AppContent() {
     showRoll: true,
     showDigital: true,
     showOffset: true,
-    showUvDtf: true
+    showUvDtf: true,
+    showOffsetBox: true
   });
 
   const [prices, setPrices] = useState({
@@ -1769,7 +2162,8 @@ function AppContent() {
           showRoll: true,
           showDigital: true,
           showOffset: true,
-          showUvDtf: true
+          showUvDtf: true,
+          showOffsetBox: true
         });
       }
     });
@@ -1802,44 +2196,55 @@ function AppContent() {
     }
   };
 
-  const handleAdminLogin = (user) => {
-    if (user.role === 'admin') {
-      setAdminUser(user);
-      setView('admin');
-    } else {
-      alert("هذا الحساب ليس لديه صلاحيات مسؤول");
-    }
+  const handleLoginSuccess = (user) => {
+    setLoggedInUser(user);
+    try {
+      localStorage.setItem('pricing_logged_user', JSON.stringify(user));
+    } catch {}
+    setView('calculator');
   };
 
+  // تسجيل الخروج الكامل (يُعيد المستخدم لشاشة الدخول)
   const handleLogout = () => {
-    setAdminUser(null);
+    setLoggedInUser(null);
+    try {
+      localStorage.removeItem('pricing_logged_user');
+    } catch {}
     setView('calculator');
+  };
+
+  // الدخول للوحة المسؤول (للمسؤولين فقط، دون إعادة تسجيل دخول)
+  const goToAdmin = () => {
+    if (loggedInUser?.role === 'admin') setView('admin');
   };
 
   if (loading) return (<div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-slate-500 gap-4"><div className="w-10 h-10 border-4 border-[#337159] border-t-transparent rounded-full animate-spin"></div><p>جاري التحميل...</p></div>);
 
-  if (view === 'login') {
-    return <AuthScreen onLoginSuccess={handleAdminLogin} onCancel={() => setView('calculator')} />;
+  // بوابة إلزامية: لا يمكن الوصول للحاسبات إلا بعد تسجيل الدخول
+  if (!loggedInUser) {
+    return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
-  if (view === 'admin' && adminUser) {
+  if (view === 'admin' && loggedInUser.role === 'admin') {
     return <AdminPanel
       prices={prices}
       onUpdatePrice={handleUpdatePrice}
-      onLogout={handleLogout}
-      currentUser={adminUser}
+      onLogout={() => setView('calculator')}
+      currentUser={loggedInUser}
       generalSettings={generalSettings}
       onUpdateGeneralSettings={handleUpdateGeneralSettings}
     />;
   }
 
-  // Default View: Calculator (No Login Required)
+  // عرض الحاسبة (للأعضاء المسجلين فقط)
   return (
     <div className="min-h-screen bg-slate-100 font-sans" dir="rtl">
       <CalculatorApp
         prices={prices}
-        onAdminLogin={() => setView('login')}
-        currentUser={{ name: 'موظف عام', uid: 'guest' }}
+        onAdminLogin={goToAdmin}
+        onLogout={handleLogout}
+        currentUser={loggedInUser}
+        isAdmin={loggedInUser.role === 'admin'}
         generalSettings={generalSettings}
       />
     </div>
