@@ -12,10 +12,11 @@ import {
   setDoc,
   getDoc,
   addDoc,
+  deleteDoc,
   collection,
   arrayUnion
 } from 'firebase/firestore';
-import { LogOut, Lock, Save, Palette, Scroll, Layout, Trash2, Plus, Maximize, Mail, Key, Users, UserPlus, Database, FileJson, Layers, Percent, History, FileText, ToggleLeft, ToggleRight, Sliders, Eye, EyeOff, Stamp, Factory, Ban, Info, Sparkles, AlertTriangle } from 'lucide-react';
+import { LogOut, Lock, Save, Palette, Scroll, Layout, Trash2, Plus, Maximize, Mail, Key, KeyRound, Check, Users, UserPlus, Database, FileJson, Layers, Percent, History, FileText, ToggleLeft, ToggleRight, Sliders, Eye, EyeOff, Stamp, Factory, Ban, Info, Sparkles, AlertTriangle } from 'lucide-react';
 
 // --- Firebase Setup ---
 const firebaseConfig = {
@@ -39,6 +40,7 @@ const LOGO_URL = "https://cdn.salla.sa/cdn-cgi/image/fit=scale-down,width=400,he
 const USERS_DB_PATH = ['artifacts', appId, 'public', 'data', 'settings', 'users_db'];
 const HISTORY_COLLECTION_PATH = ['artifacts', appId, 'public', 'data', 'pricing_history'];
 const GENERAL_SETTINGS_PATH = ['artifacts', appId, 'public', 'data', 'settings', 'general'];
+const RESET_REQUESTS_PATH = ['artifacts', appId, 'public', 'data', 'password_reset_requests'];
 
 // --- Helper Components ---
 
@@ -158,11 +160,58 @@ const ResultBox = ({ label, value, highlighted = false }) => (
 );
 
 const AuthScreen = ({ onLoginSuccess }) => {
+  const [mode, setMode] = useState('login'); // 'login' | 'forgot'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // حالة نسيت كلمة المرور
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetNewPass, setResetNewPass] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMsg, setResetMsg] = useState(null); // { type, text }
+
+  const handleResetRequest = async (e) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setResetMsg(null);
+
+    try {
+      if (resetEmail.trim().toLowerCase() === 'admin@print.com') {
+        setResetMsg({ type: 'error', text: 'حساب المدير العام لا يمكن إعادة تعيينه من هنا.' });
+        setResetLoading(false);
+        return;
+      }
+
+      const usersSnap = await getDoc(doc(db, ...USERS_DB_PATH));
+      const currentUsers = usersSnap.exists() ? (usersSnap.data().list || []) : [];
+      const foundUser = currentUsers.find(u => u.email.toLowerCase() === resetEmail.trim().toLowerCase());
+
+      if (!foundUser) {
+        setResetMsg({ type: 'error', text: 'هذا البريد الإلكتروني غير مسجل في النظام.' });
+        setResetLoading(false);
+        return;
+      }
+
+      await addDoc(collection(db, ...RESET_REQUESTS_PATH), {
+        email: foundUser.email,
+        name: foundUser.name || '',
+        requestedPassword: resetNewPass,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      });
+
+      setResetMsg({ type: 'success', text: 'تم إرسال طلبك للمسؤول. ستتمكن من الدخول بكلمة المرور الجديدة فور موافقته.' });
+      setResetEmail('');
+      setResetNewPass('');
+    } catch (err) {
+      console.error(err);
+      setResetMsg({ type: 'error', text: 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.' });
+    }
+    setResetLoading(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -210,31 +259,80 @@ const AuthScreen = ({ onLoginSuccess }) => {
           <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 flex items-center justify-center p-1">
             <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-[#337159]">تسجيل الدخول</h1>
-          <p className="text-slate-500 text-sm mt-1">يرجى تسجيل الدخول للوصول إلى الحاسبات</p>
+          <h1 className="text-2xl font-bold text-[#337159]">{mode === 'login' ? 'تسجيل الدخول' : 'استعادة كلمة المرور'}</h1>
+          <p className="text-slate-500 text-sm mt-1">{mode === 'login' ? 'يرجى تسجيل الدخول للوصول إلى الحاسبات' : 'أدخل بريدك وكلمة المرور الجديدة لإرسال طلب للمسؤول'}</p>
         </div>
 
-        {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center border border-red-100">{error}</div>}
+        {mode === 'login' ? (
+          <>
+            {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center border border-red-100">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-[#337159] mb-1">البريد الإلكتروني</label>
-            <div className="relative">
-              <Mail className="absolute top-3 right-3 w-5 h-5 text-[#b99ecb]" />
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pr-10 pl-3 py-2.5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#fa5732] outline-none" placeholder="name@company.com" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-[#337159] mb-1">كلمة المرور</label>
-            <div className="relative">
-              <Key className="absolute top-3 right-3 w-5 h-5 text-[#b99ecb]" />
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pr-10 pl-3 py-2.5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#fa5732] outline-none" placeholder="******" />
-            </div>
-          </div>
-          <button type="submit" disabled={loading} className="w-full bg-[#fa5732] hover:bg-[#d94a29] text-white py-3 rounded-xl font-bold shadow-lg shadow-orange-100 transition-all mt-6 disabled:opacity-70 disabled:cursor-not-allowed">
-            {loading ? 'جاري التحقق...' : 'تسجيل الدخول'}
-          </button>
-        </form>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#337159] mb-1">البريد الإلكتروني</label>
+                <div className="relative">
+                  <Mail className="absolute top-3 right-3 w-5 h-5 text-[#b99ecb]" />
+                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pr-10 pl-3 py-2.5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#fa5732] outline-none" placeholder="name@company.com" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#337159] mb-1">كلمة المرور</label>
+                <div className="relative">
+                  <Key className="absolute top-3 right-3 w-5 h-5 text-[#b99ecb]" />
+                  <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pr-10 pl-3 py-2.5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#fa5732] outline-none" placeholder="******" />
+                </div>
+              </div>
+              <button type="submit" disabled={loading} className="w-full bg-[#fa5732] hover:bg-[#d94a29] text-white py-3 rounded-xl font-bold shadow-lg shadow-orange-100 transition-all mt-6 disabled:opacity-70 disabled:cursor-not-allowed">
+                {loading ? 'جاري التحقق...' : 'تسجيل الدخول'}
+              </button>
+            </form>
+
+            <button
+              type="button"
+              onClick={() => { setMode('forgot'); setError(''); setResetMsg(null); }}
+              className="w-full text-center text-sm text-[#337159] hover:text-[#fa5732] font-medium mt-5 flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <KeyRound className="w-4 h-4" /> نسيت كلمة المرور؟
+            </button>
+          </>
+        ) : (
+          <>
+            {resetMsg && (
+              <div className={`p-3 rounded-lg mb-6 text-sm text-center border ${resetMsg.type === 'success' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
+                {resetMsg.text}
+              </div>
+            )}
+
+            <form onSubmit={handleResetRequest} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#337159] mb-1">البريد الإلكتروني المسجّل</label>
+                <div className="relative">
+                  <Mail className="absolute top-3 right-3 w-5 h-5 text-[#b99ecb]" />
+                  <input type="email" required value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} className="w-full pr-10 pl-3 py-2.5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#fa5732] outline-none" placeholder="name@company.com" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#337159] mb-1">كلمة المرور الجديدة المطلوبة</label>
+                <div className="relative">
+                  <Key className="absolute top-3 right-3 w-5 h-5 text-[#b99ecb]" />
+                  <input type="text" required minLength={4} value={resetNewPass} onChange={(e) => setResetNewPass(e.target.value)} className="w-full pr-10 pl-3 py-2.5 border border-[#b99ecb] rounded-xl focus:ring-2 focus:ring-[#fa5732] outline-none" placeholder="كلمة المرور الجديدة" />
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">سيتم تفعيلها بعد موافقة المسؤول على الطلب.</p>
+              </div>
+              <button type="submit" disabled={resetLoading} className="w-full bg-[#337159] hover:bg-[#2a5c48] text-white py-3 rounded-xl font-bold shadow-lg transition-all mt-6 disabled:opacity-70 disabled:cursor-not-allowed">
+                {resetLoading ? 'جاري الإرسال...' : 'إرسال طلب إعادة التعيين'}
+              </button>
+            </form>
+
+            <button
+              type="button"
+              onClick={() => { setMode('login'); setResetMsg(null); }}
+              className="w-full text-center text-sm text-slate-500 hover:text-[#337159] font-medium mt-5 transition-colors"
+            >
+              العودة لتسجيل الدخول
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -248,6 +346,8 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [usersList, setUsersList] = useState([]);
+  const [resetRequests, setResetRequests] = useState([]);
+  const [processingReset, setProcessingReset] = useState(null);
 
   useEffect(() => {
     const usersDocRef = doc(db, ...USERS_DB_PATH);
@@ -258,6 +358,48 @@ const UserManagement = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const reqRef = collection(db, ...RESET_REQUESTS_PATH);
+    const unsubscribe = onSnapshot(reqRef, (snapshot) => {
+      const data = snapshot.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(r => r.status === 'pending')
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setResetRequests(data);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // اعتماد طلب: تعيين كلمة المرور الجديدة للمستخدم ثم حذف الطلب
+  const handleApproveReset = async (req) => {
+    setProcessingReset(req.id);
+    try {
+      const newList = usersList.map(u =>
+        u.email.toLowerCase() === req.email.toLowerCase()
+          ? { ...u, password: req.requestedPassword }
+          : u
+      );
+      await setDoc(doc(db, ...USERS_DB_PATH), { list: newList }, { merge: true });
+      await deleteDoc(doc(db, ...RESET_REQUESTS_PATH, req.id));
+    } catch (err) {
+      console.error(err);
+      alert('حدث خطأ أثناء اعتماد الطلب: ' + err.message);
+    }
+    setProcessingReset(null);
+  };
+
+  // رفض / حذف طلب دون تغيير كلمة المرور
+  const handleRejectReset = async (req) => {
+    setProcessingReset(req.id);
+    try {
+      await deleteDoc(doc(db, ...RESET_REQUESTS_PATH, req.id));
+    } catch (err) {
+      console.error(err);
+      alert('حدث خطأ أثناء حذف الطلب: ' + err.message);
+    }
+    setProcessingReset(null);
+  };
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
@@ -305,6 +447,48 @@ const UserManagement = () => {
           <div className="md:col-span-2 mt-2"><button type="submit" disabled={loading} className="w-full bg-[#337159] hover:bg-[#2a5c48] text-white py-2 rounded-lg font-bold shadow transition-colors disabled:opacity-50">{loading ? 'جاري الإنشاء...' : 'إنشاء الحساب'}</button></div>
         </form>
       </div>
+      {/* طلبات إعادة تعيين كلمة المرور */}
+      <div className="bg-amber-50 p-4 md:p-6 rounded-xl border border-amber-200">
+        <h4 className="font-bold text-amber-800 mb-4 flex items-center gap-2">
+          <KeyRound className="w-5 h-5" /> طلبات إعادة تعيين كلمة المرور
+          {resetRequests.length > 0 && (
+            <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{resetRequests.length}</span>
+          )}
+        </h4>
+        {resetRequests.length === 0 ? (
+          <p className="text-sm text-amber-700/70 text-center py-2">لا توجد طلبات معلّقة حالياً.</p>
+        ) : (
+          <div className="space-y-3">
+            {resetRequests.map((req) => (
+              <div key={req.id} className="bg-white p-3 rounded-lg border border-amber-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex-1 text-sm">
+                  <div className="font-bold text-slate-700">{req.name || 'مستخدم'}</div>
+                  <div className="font-mono text-xs text-slate-500">{req.email}</div>
+                  <div className="text-xs mt-1">كلمة المرور الجديدة المطلوبة: <span className="font-mono font-bold text-[#fa5732] bg-[#fa5732]/10 px-2 py-0.5 rounded">{req.requestedPassword}</span></div>
+                  <div className="text-[10px] text-slate-400 mt-1">{new Date(req.createdAt).toLocaleString('ar-EG')}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleApproveReset(req)}
+                    disabled={processingReset === req.id}
+                    className="bg-[#337159] hover:bg-[#2a5c48] text-white px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-1.5 disabled:opacity-50 transition-colors"
+                  >
+                    <Check className="w-4 h-4" /> {processingReset === req.id ? 'جارٍ...' : 'اعتماد'}
+                  </button>
+                  <button
+                    onClick={() => handleRejectReset(req)}
+                    disabled={processingReset === req.id}
+                    className="text-red-500 hover:bg-red-50 border border-red-100 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 disabled:opacity-50 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" /> رفض
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="bg-white p-4 rounded-xl border border-slate-200">
         <h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-[#b99ecb]" /> قائمة المستخدمين المسجلين</h4>
         <div className="overflow-x-auto">
