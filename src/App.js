@@ -338,7 +338,7 @@ const AuthScreen = ({ onLoginSuccess }) => {
   );
 };
 
-const UserManagement = () => {
+const UserManagement = ({ currentUser }) => {
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPass, setNewUserPass] = useState('');
   const [newUserName, setNewUserName] = useState('');
@@ -348,6 +348,7 @@ const UserManagement = () => {
   const [usersList, setUsersList] = useState([]);
   const [resetRequests, setResetRequests] = useState([]);
   const [processingReset, setProcessingReset] = useState(null);
+  const [deletingUser, setDeletingUser] = useState(null);
 
   useEffect(() => {
     const usersDocRef = doc(db, ...USERS_DB_PATH);
@@ -434,6 +435,26 @@ const UserManagement = () => {
     setLoading(false);
   };
 
+  // حذف مستخدم من القائمة
+  const handleDeleteUser = async (user) => {
+    if (currentUser && user.email.toLowerCase() === currentUser.email.toLowerCase()) {
+      alert('لا يمكنك حذف حسابك الحالي.');
+      return;
+    }
+    if (!window.confirm(`هل أنت متأكد من حذف المستخدم "${user.name}" (${user.email})؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+      return;
+    }
+    setDeletingUser(user.email);
+    try {
+      const newList = usersList.filter(u => u.email.toLowerCase() !== user.email.toLowerCase());
+      await setDoc(doc(db, ...USERS_DB_PATH), { list: newList }, { merge: true });
+    } catch (err) {
+      console.error(err);
+      alert('حدث خطأ أثناء حذف المستخدم: ' + err.message);
+    }
+    setDeletingUser(null);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="bg-[#337159]/5 p-6 rounded-xl border border-[#337159]/20">
@@ -494,17 +515,30 @@ const UserManagement = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-right whitespace-nowrap">
             <thead className="bg-slate-50 text-slate-600 font-bold">
-              <tr><th className="p-3 border-b">الاسم</th><th className="p-3 border-b">البريد الإلكتروني</th><th className="p-3 border-b">كلمة المرور</th><th className="p-3 border-b">الدور</th><th className="p-3 border-b">تاريخ التسجيل</th></tr>
+              <tr><th className="p-3 border-b">الاسم</th><th className="p-3 border-b">البريد الإلكتروني</th><th className="p-3 border-b">كلمة المرور</th><th className="p-3 border-b">الدور</th><th className="p-3 border-b">تاريخ التسجيل</th><th className="p-3 border-b text-center">إجراءات</th></tr>
             </thead>
             <tbody>
-              {usersList.length === 0 ? (<tr><td colSpan="5" className="p-4 text-center text-slate-400">لا يوجد مستخدمين مسجلين في القائمة بعد.</td></tr>) : (
-                usersList.map((user, idx) => (
+              {usersList.length === 0 ? (<tr><td colSpan="6" className="p-4 text-center text-slate-400">لا يوجد مستخدمين مسجلين في القائمة بعد.</td></tr>) : (
+                usersList.map((user, idx) => {
+                  const isSelf = currentUser && user.email.toLowerCase() === currentUser.email.toLowerCase();
+                  return (
                   <tr key={idx} className="border-b hover:bg-slate-50">
                     <td className="p-3">{user.name}</td><td className="p-3 font-mono text-xs">{user.email}</td><td className="p-3 font-mono text-xs text-slate-400">{user.password}</td>
                     <td className="p-3"><span className={`px-2 py-1 rounded text-xs font-bold ${user.role === 'admin' ? 'bg-[#b99ecb]/20 text-[#b99ecb]' : 'bg-[#337159]/10 text-[#337159]'}`}>{user.role === 'admin' ? 'مسؤول' : 'موظف'}</span></td>
                     <td className="p-3 text-slate-400 text-xs">{new Date(user.createdAt).toLocaleDateString('ar-EG')}</td>
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => handleDeleteUser(user)}
+                        disabled={isSelf || deletingUser === user.email}
+                        title={isSelf ? 'لا يمكنك حذف حسابك الحالي' : 'حذف المستخدم'}
+                        className="text-red-500 hover:bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" /> {deletingUser === user.email ? 'جارٍ...' : 'حذف'}
+                      </button>
+                    </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -942,7 +976,7 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
           </div>
         )}
 
-        {activeTab === 'users' && <UserManagement />}
+        {activeTab === 'users' && <UserManagement currentUser={currentUser} />}
         {activeTab === 'history' && <HistoryLog />}
 
         {/* General Settings Tab */}
