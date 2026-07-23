@@ -1093,13 +1093,29 @@ const AdminPanel = ({ prices, onUpdatePrice, onLogout, currentUser, generalSetti
 const OB_MACHINES = {
   'ربع': { label: 'ربع 35×50', sheetW: 35, sheetH: 50, maxFlatW: 47, maxFlatH: 33, model: 'tiered', setup: 1050, tier1: 0.30, tier2: 0.65, tier3: 0.61 },
   'نص': { label: 'نص 50×70', sheetW: 50, sheetH: 70, maxFlatW: 69, maxFlatH: 49, model: 'tiered', setup: 1467, tier1: 1.07, tier2: 1.25, tier3: 1.09 },
-  'كامل': { label: 'كامل 70×100', sheetW: 70, sheetH: 100, maxFlatW: 99, maxFlatH: 69, model: 'detailed', printTable: { 1000: 450, 2000: 600, 3000: 700, 5000: 900, 10000: 1500 }, diePerThousand1: 250, diePerThousandExtra: 150, plate: 600, celloPerSheet: 0.60 }
+  'كامل': {
+    label: 'كامل 70×100', sheetW: 70, sheetH: 100, maxFlatW: 99, maxFlatH: 69, model: 'detailed',
+    // الطباعة 4 لون: جدول مرجعي مباشر من المورد (مبني على عدد الحبات — كل وجه طباعة يُسعَّر مستقلاً)
+    printTable: { 500: 900, 1000: 900, 3000: 1500, 5000: 2000, 10000: 3000, 20000: 4800 },
+    diePerThousand1: 250, diePerThousandExtra: 150,
+    plate: 800,
+    // شيتات ثابتة للمعايرة والضبط (هالك تجهيز) — أياً كانت الكمية
+    setupSheets: 200,
+    // لا هالك نسبي هنا — الـ200 شيت تغطي التجهيز
+    wastage: 1.00,
+    celloPerSheet: 0.60
+  }
 };
 const OB_CELLO_PER_UNIT_SMALL = 0.20;
 const OB_BASE_PAPER_PRICE = 1.35;
 const OB_WASTAGE = 1.05;
-const OB_QUANTITIES = [500, 1000, 3000, 5000, 10000];
+const OB_QUANTITIES = [500, 1000, 2000, 3000, 5000, 10000, 20000];
 const OB_FACES_MULTIPLIER = { 1: 1.0, 2: 1.5 };
+// معامل أوجه الطباعة لماكينة الكامل 70×100 فقط:
+// وجهين بنفس التصميم = نفس الزنكات + شوط ثاني (1.5)
+// وجهين بتصميم مختلف = وجه طباعة مستقل بالكامل (2.0)
+const OB_FULL_FACE2_SAME = 1.5;
+const OB_FULL_FACE2_DIFF = 2.0;
 const OB_DIGITAL_QUANTITIES = [50, 100, 250];
 const OB_DIGITAL_PRICES = { 50: 6.90, 100: 5.75, 250: 4.60 };
 const OB_DIGITAL_PRINT_2FACE_ADD = 1.15;
@@ -1143,11 +1159,11 @@ function obInterpolatePrint(qty, table) {
   }
   return 0;
 }
-function obCalcCost(machineKey, qty, faces, celloFaces, paperPrice, copiesPerSheet) {
+function obCalcCost(machineKey, qty, faces, celloFaces, paperPrice, copiesPerSheet, face2Diff) {
   const m = OB_MACHINES[machineKey];
   const faceMult = OB_FACES_MULTIPLIER[faces];
   let sheetsNeeded = 0;
-  if (copiesPerSheet > 0) sheetsNeeded = Math.ceil((qty / copiesPerSheet) * OB_WASTAGE);
+  if (copiesPerSheet > 0) sheetsNeeded = Math.ceil((qty / copiesPerSheet) * (m.wastage != null ? m.wastage : OB_WASTAGE));
   if (m.model === 'tiered') {
     let tieredPrice;
     if (qty <= 1000) tieredPrice = m.tier1 * qty;
@@ -1158,14 +1174,27 @@ function obCalcCost(machineKey, qty, faces, celloFaces, paperPrice, copiesPerShe
     const paperAdjustment = sheetsNeeded * (paperPrice - OB_BASE_PAPER_PRICE);
     return { model: 'tiered', setup: m.setup, tiered: tieredPrice * faceMult, cello: celloCost, paperAdjustment, sheets: sheetsNeeded, total: baseCost + celloCost + paperAdjustment };
   }
-  const printCost = obInterpolatePrint(qty, m.printTable) * faceMult;
+  // === النموذج التفصيلي (الكامل 70×100) ===
+  // كل وجه طباعة يُسعَّر مستقلاً من الجدول:
+  // وجه واحد = ×1 | وجهين نفس التصميم = ×1.5 | وجهين تصميم مختلف = ×2 (وجه طباعة جديد)
+  const printUnit = obInterpolatePrint(qty, m.printTable);
+  const printMult = faces === 2 ? (face2Diff ? OB_FULL_FACE2_DIFF : OB_FULL_FACE2_SAME) : 1.0;
+  const printCost = printUnit * printMult;
   const totalK = Math.ceil(qty / 1000);
   const dieCost = m.diePerThousand1 + (totalK - 1) * m.diePerThousandExtra;
   const plateCost = m.plate;
+  // السلوفان: 0.60 × عدد الشيتات الصالحة (بدون هالك، لأنه يُطبّق على المنتج النهائي)
   const sheetsRaw = copiesPerSheet > 0 ? Math.ceil(qty / copiesPerSheet) : 0;
   const celloCost = m.celloPerSheet * sheetsRaw * celloFaces;
-  const paperCost = sheetsNeeded * paperPrice;
-  return { model: 'detailed', print: printCost, die: dieCost, plate: plateCost, cello: celloCost, paper: paperCost, sheets: sheetsNeeded, total: printCost + dieCost + plateCost + celloCost + paperCost };
+  // الورق: شيتات الإنتاج (بدون هالك نسبي) + 200 شيت ثابتة للمعايرة والضبط
+  const setupSheets = m.setupSheets || 0;
+  const totalSheets = sheetsNeeded + setupSheets;
+  const paperCost = totalSheets * paperPrice;
+  return {
+    model: 'detailed', print: printCost, printUnit, printMult, die: dieCost, plate: plateCost,
+    cello: celloCost, paper: paperCost, prodSheets: sheetsNeeded, setupSheets, sheets: totalSheets,
+    total: printCost + dieCost + plateCost + celloCost + paperCost
+  };
 }
 function obFmt(n, decimals = 0) {
   return (n || 0).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
@@ -1198,6 +1227,7 @@ const OffsetBoxesCalculator = () => {
   const [flatW, setFlatW] = useState('67');
   const [paper, setPaper] = useState('انفربرش');
   const [faces, setFaces] = useState(1);
+  const [face2Design, setFace2Design] = useState('same');
   const [cello, setCello] = useState(1);
   const [paperPrice, setPaperPrice] = useState('1.35');
   const [margin, setMargin] = useState('40');
@@ -1209,6 +1239,7 @@ const OffsetBoxesCalculator = () => {
     const pp = parseFloat(paperPrice) || OB_BASE_PAPER_PRICE;
     const marginR = (parseFloat(margin) || 0) / 100;
     const vatRate = (parseFloat(vat) || 0) / 100;
+    const face2Diff = face2Design === 'diff';
 
     if (!L || !W || L < 1 || W < 1) return { state: 'empty' };
 
@@ -1236,19 +1267,19 @@ const OffsetBoxesCalculator = () => {
         const preTotal = preVatPU * c.q;
         return { ...c, perUnitPre: preVatPU, preTotal, vatAmt: preTotal * vatRate, finalTotal: finalPU * c.q, digital: true };
       }
-      const cost = obCalcCost(machineKey, c.q, faces, cello, pp, copies);
+      const cost = obCalcCost(machineKey, c.q, faces, cello, pp, copies, face2Diff);
       const priceWithMargin = cost.total * (1 + marginR);
       return { ...c, perUnitPre: priceWithMargin / c.q, preTotal: priceWithMargin, vatAmt: priceWithMargin * vatRate, finalTotal: priceWithMargin * (1 + vatRate), digital: false };
     });
 
     const refQty = 5000;
-    const refCost = obCalcCost(machineKey, refQty, faces, cello, pp, copies);
+    const refCost = obCalcCost(machineKey, refQty, faces, cello, pp, copies, face2Diff);
     const refMarginAmt = refCost.total * marginR;
     const refWithMargin = refCost.total + refMarginAmt;
 
-    return { state: 'ok', L, W, machineKey, m, copies, band, digitalCopies, digitalEligible, cols, vatRate, marginR, refQty, refCost, refMarginAmt, refWithMargin, faces, cello, paperPrice: pp };
+    return { state: 'ok', L, W, machineKey, m, copies, band, digitalCopies, digitalEligible, cols, vatRate, marginR, refQty, refCost, refMarginAmt, refWithMargin, faces, face2Diff, cello, paperPrice: pp };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flatL, flatW, paperPrice, margin, vat, faces, cello]);
+  }, [flatL, flatW, paperPrice, margin, vat, faces, face2Design, cello]);
 
   const inputCls = "w-full p-2.5 border border-[#b99ecb] rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-[#337159] focus:border-[#337159]";
   const labelCls = "block text-sm font-medium text-slate-700 mb-1.5";
@@ -1290,11 +1321,22 @@ const OffsetBoxesCalculator = () => {
             <div>
               <label className={labelCls}>أوجه الطباعة</label>
               <select value={faces} onChange={e => setFaces(parseInt(e.target.value))} className={inputCls}>
-                <option value={1}>وجه واحد</option>
-                <option value={2}>وجهين</option>
+                <option value={1}>وجه واحد (خارجي فقط)</option>
+                <option value={2}>وجهين (داخلي وخارجي)</option>
               </select>
             </div>
           </div>
+
+          {faces === 2 && (
+            <div>
+              <label className={labelCls}>تصميم الوجه الثاني</label>
+              <select value={face2Design} onChange={e => setFace2Design(e.target.value)} className={inputCls}>
+                <option value="same">نفس تصميم الوجه الأول</option>
+                <option value="diff">تصميم مختلف</option>
+              </select>
+              <p className="text-[11px] text-slate-400 mt-1.5">في ماكينة الكامل 70×100: التصميم المختلف يُحتسب وجه طباعة مستقل بسعر الجدول كاملاً</p>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -1415,6 +1457,12 @@ const OffsetBoxesCalculator = () => {
                 </div>
               )}
 
+              {data.machineKey === 'كامل' && (
+                <div className="mt-4 bg-amber-50 border-r-4 border-amber-500 text-amber-800 rounded-lg p-3 text-xs leading-relaxed">
+                  <strong>ماكينة الكامل 70×100:</strong> كل وجه طباعة يُسعَّر مستقلاً من جدول المورد (500 و1000 = 900 · 3000 = 1500 · 5000 = 2000 · 10 آلاف = 3000 · 20 ألف = 4800)، فالوجه الثاني بتصميم مختلف يُحتسب وجه طباعة جديد كامل. القالب ثابت <strong>800</strong> ر.س، ويُضاف <strong>200 شيت</strong> ثابتة للمعايرة والضبط أياً كانت الكمية، وبدون هالك نسبي إضافي على الورق (الـ200 شيت تغطي التجهيز).
+                </div>
+              )}
+
               {/* تفصيل التكلفة لكمية مرجعية */}
               <div className="mt-6 bg-slate-50 rounded-xl p-4">
                 <h4 className="font-bold text-[#337159] text-sm mb-3">تفصيل التكلفة لكمية مرجعية ({obFmt(data.refQty)} حبة)</h4>
@@ -1438,13 +1486,14 @@ const OffsetBoxesCalculator = () => {
                       </>
                     ) : (
                       <>
-                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">الطباعة 4 لون ({data.faces} وجه × سعر الكمية)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.print)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.print / data.refWithMargin * 100, 1)}%</td></tr>
+                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">الطباعة 4 لون ({obFmt(data.refCost.printUnit)} × {data.refCost.printMult} — {data.faces === 2 ? (data.face2Diff ? 'وجهين بتصميم مختلف' : 'وجهين بنفس التصميم') : 'وجه واحد'})</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.print)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.print / data.refWithMargin * 100, 1)}%</td></tr>
                         <tr><td className="p-2 text-right bg-white border-b border-slate-100">التكسير ({data.m.diePerThousand1} لأول 1000 + {Math.ceil(data.refQty / 1000) - 1} × {data.m.diePerThousandExtra})</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.die)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.die / data.refWithMargin * 100, 1)}%</td></tr>
-                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">القالب (ثابت)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.plate)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.plate / data.refWithMargin * 100, 1)}%</td></tr>
+                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">القالب (ثابت — {obFmt(data.m.plate)} ر.س)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.plate)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.plate / data.refWithMargin * 100, 1)}%</td></tr>
                         {data.cello > 0 && (
                           <tr><td className="p-2 text-right bg-white border-b border-slate-100">السلوفان ({data.cello} وجه × {data.m.celloPerSheet.toFixed(2)} ر.س × عدد الشيتات)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.cello)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.cello / data.refWithMargin * 100, 1)}%</td></tr>
                         )}
-                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">الورق ({data.refCost.sheets.toLocaleString()} شيت × {data.paperPrice.toFixed(2)} ر.س)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.paper)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.paper / data.refWithMargin * 100, 1)}%</td></tr>
+                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">الورق — إنتاج ({data.refCost.prodSheets.toLocaleString()} شيت × {data.paperPrice.toFixed(2)} ر.س)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.prodSheets * data.paperPrice)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.prodSheets * data.paperPrice / data.refWithMargin * 100, 1)}%</td></tr>
+                        <tr><td className="p-2 text-right bg-white border-b border-slate-100">الورق — معايرة وضبط ({data.refCost.setupSheets} شيت ثابتة × {data.paperPrice.toFixed(2)} ر.س)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.setupSheets * data.paperPrice)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refCost.setupSheets * data.paperPrice / data.refWithMargin * 100, 1)}%</td></tr>
                       </>
                     )}
                     <tr><td className="p-2 text-right bg-white border-b border-slate-100">هامش الربح ({(data.marginR * 100).toFixed(0)}%)</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refMarginAmt)}</td><td className="p-2 text-center bg-white border-b border-slate-100">{obFmt(data.refMarginAmt / data.refWithMargin * 100, 1)}%</td></tr>
